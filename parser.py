@@ -1,25 +1,27 @@
-components = {}
-def read_att_pro_req_cap_int(s):
-    pass
+import json
+
+def Convert(lst):
+    res_dct = {lst[i]: lst[i + 1] for i in range(0, len(lst), 2)}
+    return res_dct
+
+def innerdicts(data,tabs, outfile):
+    for key, value in data.items():
+        if tabs == 0: outfile.write('\n')
+        if isinstance(value,list):
+            value = value[0]
+        if isinstance(value,dict):
+            outfile.write('    '*(tabs)  + str(key) + ':  \n')
+            innerdicts(value,tabs+1,outfile)
+        else:
+            outfile.write('    '*(tabs) + str(key) + ': ' + str(value) + ' \n')
 
 
-with open("snowUC-testbed.json") as file:
-    lines = file.readlines()
-    name = ""
-    for l in lines:
-        if l.startswith("    \"https://www.sodalite.eu/"):
-            name = l[l.rfind('/')+1 : l.rfind('": {')]
-            components[name] = {}
-        elif '": "' in l:
-            a = l.split('": "')[0].replace("\"","").replace("}","").replace("{","").replace(" ","").replace(',',"").replace('\n',"")
-            b = l.split('": "')[1].replace("\"","").replace("}","").replace("{","").replace(" ","").replace(',',"").replace('\n',"")
-            p = {a:b}
-            components[name].update(p)
-        elif '": [' in l:
-            a = l.split('": [')[0].replace("\"","").replace("}","").replace("{","").replace(" ","").replace(',',"").replace('\n',"")
-            b = read_att_pro_req_cap_int(l.split('": [')[1])
-            p = {a:b}
-            components[name].update(p)
+def parse_file(filename):
+    with open(filename) as file:
+        data = json.load(file)
+    outfile = open(filename.replace(".json",".yml"), "w")
+    innerdicts(data,0, outfile)
 
 
-print(components)
+
+data = parse_file("snowUC-testbed.json")
