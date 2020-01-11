@@ -1,7 +1,8 @@
 import json
-node_templates = [] # header and template nodes
+topology_template = [] # header and template nodes
 node_types = [] # type nodes
-def innerdicts(data,tabs, l=[]):
+
+def innerdicts(data, tabs, l=[]):
     for key, value in data.items():
         if isinstance(value,list):
             if isinstance(value[0],dict):
@@ -9,18 +10,20 @@ def innerdicts(data,tabs, l=[]):
                 for i in value:
                     v.update(i)
                 value = v
-        if isinstance(value,dict):
-            if 'isNodeTemplate' in value:
+        if isinstance(value, dict):
+            if 'isNodeTemplate' in value: # node template or node type
                 if value['isNodeTemplate'] == False:
+                    if not node_types: # node_types should be at same level as topology_template
+                        tabs -= 1
                     l = node_types
                 else:
-                    l = node_templates
+                    l = topology_template
                 del value['isNodeTemplate']
             if "https://" in str(key):
                 key = str(key)[str(key).rfind('/')+1:]
             l. append('    '*(tabs)  + str(key) + ':  \n')
-            innerdicts(value,tabs+1, l)
-        else:
+            innerdicts(value, tabs+1, l)
+        else: # atom
             l. append('    '*(tabs) + str(key) + ': ' + str(value) + ' \n')
 
 
@@ -32,19 +35,18 @@ def parse_file(filename):
     #create an output file
     outfile = open(filename.replace(".json",".yml"), "w")
     # output file header generator
-    outfile.write('tosca_definitions_version: tosca_simple_yaml_1_0 \ndescription: Template for deploying a single %s\n' %list(data)[0])
-    header = []
+    outfile.write('tosca_definitions_version: tosca_simple_yaml_1_0 \n')
+    header = ['    description: Template for deploying a single %s\n' %list(data)[0]]
     innerdicts(data[list(data)[0]],1, header)
-    node_templates.append('topology_template:')
-    node_templates.append('\n    node_templates: \n')
+    topology_template.append('topology_template: \n')
+    topology_template.extend(header)
+    topology_template.append('    node_templates: \n')
     del data[list(data)[0]]
     # output file content generator
-    innerdicts(data,2)
+    innerdicts(data, 2)
     #final clean_up
-    s = ''.join(header) + ''.join(node_templates) + '\nnode types: \n' +''.join(node_types)
+    s = ''.join(topology_template) + 'node types: \n' +''.join(node_types)
     s.replace('tosca_definitions_version: tosca_simple_yaml_1_0', '')
     outfile.write(s)
-
-
 
 data = parse_file("snowUC-testbed.json")
