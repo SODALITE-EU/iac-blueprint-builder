@@ -28,12 +28,9 @@ def innerdicts(data, tabs, l=[]):
 
 
 
-def parse_file(filename):
-    # read the json file
-    with open(filename) as file:
-        data = json.load(file)
+def parse_data(name, data):
     #create an output file
-    outfile = open(filename.replace(".json",".yml"), "w")
+    outfile = open(name+".yml", "w")
     # output file header generator
     outfile.write('tosca_definitions_version: tosca_simple_yaml_1_0 \n')
     header = ['    description: Template for deploying a single %s\n' %list(data)[0]]
@@ -48,5 +45,8 @@ def parse_file(filename):
     s = ''.join(topology_template) + 'node types: \n' +''.join(node_types)
     s.replace('tosca_definitions_version: tosca_simple_yaml_1_0', '')
     outfile.write(s)
+    print('parsed')
 
-data = parse_file("snowUC-testbed.json")
+
+
+#data = parse_file("snowUC-testbed.json")
