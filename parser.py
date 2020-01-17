@@ -1,6 +1,7 @@
-import json
+import json,os
 topology_template = [] # header and template nodes
 node_types = [] # type nodes
+ansible_files = []
 
 def innerdicts(data, tabs, l=[]):
     for key, value in data.items():
@@ -23,9 +24,11 @@ def innerdicts(data, tabs, l=[]):
                 key = str(key)[str(key).rfind('/')+1:]
             l. append('    '*(tabs)  + str(key) + ':  \n')
             innerdicts(value, tabs+1, l)
-        else: # atom
+        else:
+            if "Ansibles" in str(value):
+                ansible_files.append(str(value))
+                value = os.path.join(*value.split('/')[3:])
             l. append('    '*(tabs) + str(key) + ': ' + str(value) + ' \n')
-
 
 
 def parse_data(name, data):
@@ -45,8 +48,12 @@ def parse_data(name, data):
     s = ''.join(topology_template) + 'node types: \n' +''.join(node_types)
     s.replace('tosca_definitions_version: tosca_simple_yaml_1_0', '')
     outfile.write(s)
-    print('parsed')
+    print('TOSCA generated -------')
+    return ansible_files
 
 
-
-#data = parse_file("snowUC-testbed.json")
+# with open("snowUC-testbed.json") as file:
+#     body = json.load(file)
+# a = parse_data("name",body)
+# for l in a:
+#     print (l)
