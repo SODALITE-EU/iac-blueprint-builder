@@ -1,5 +1,6 @@
 from flask import Flask, request
 import requests, os
+import blueprint2json
 from gevent.pywsgi import WSGIServer
 import parser
 
@@ -15,12 +16,14 @@ def parse():
         print('Reading   %s ------- '%url)
         temp = str(url).split('/')
         filename = temp[-1]
-        foldername = os.path.join(*temp[3:-1])
+        foldername = os.path.join(*temp[4:-1])
         if not os.path.exists(foldername):
             os.makedirs(foldername)
         outfile = open(os.path.join(foldername, filename), "w")
         outfile.write(str(requests.get(url).content))
-
+        print('Ansible files done ------- ')
+        print('blueprint2json ongoing ------- ')
+        os.system('python3 blueprint2json.py a test2.yml > Tosca_ansible.json')
     return "OK"
 
 if __name__ == '__main__':
