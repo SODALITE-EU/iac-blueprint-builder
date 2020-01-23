@@ -4,8 +4,10 @@ import blueprint2json
 from gevent.pywsgi import WSGIServer
 import parser
 import uuid
-
+import json
 app = Flask(__name__)
+
+XOPERA_API = 'http://154.48.185.206:5000/manage'
 
 @app.route('/parse', methods = ['POST'])
 def parse():
@@ -24,11 +26,12 @@ def parse():
         if not os.path.exists(foldername):
             os.makedirs(foldername)
         outfile = open(os.path.join(foldername, filename), "w")
-        outfile.write(str(requests.get(url).content))
-        print('Ansible files done ------- ')
+        outfile.write(str(requests.get(url).text))
+    print('Ansible files done ------- ')
     print('blueprint2json ongoing ------- ')
     os.system('python3 blueprint2json.py %s %s.yml > %s.json' % (body["name"], outpath, outpath))
-    return "OK"
+    payload = open('%s.json' % (outpath,), "r").read()
+    return json.loads(requests.post(XOPERA_API, json=json.loads(payload)).text)
 
 if __name__ == '__main__':
     http_server = WSGIServer(('', 80), app)
