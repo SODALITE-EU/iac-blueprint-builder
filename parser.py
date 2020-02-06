@@ -16,6 +16,13 @@ ansible_files = []
 inputs = ['\n topology_template:\n\n']
 
 
+types = ['https://www.sodalite.eu/ontologies/tosca/tosca.artifacts', 'https://www.sodalite.eu/ontologies/tosca/tosca.capabilities',
+'https://www.sodalite.eu/ontologies/tosca/tosca.datatypes',
+'https://www.sodalite.eu/ontologies/tosca/tosca.entity', 'https://www.sodalite.eu/ontologies/tosca/tosca.groups', 'https://www.sodalite.eu/ontologies/tosca/tosca.interfaces',
+'https://www.sodalite.eu/ontologies/tosca/tosca.policies', 'https://www.sodalite.eu/ontologies/tosca/tosca.relationships']
+
+l_of_l = [artifact_types ,    capability_types,    data_types ,    entity_types ,    group_types, interface_types, policy_types, relationship_types, node_types, inputs, topology_template]
+
 def innerdicts(data, tabs, l=[]):
     for key, value in data.items():
         if key == "participants": participants = value
@@ -32,27 +39,13 @@ def innerdicts(data, tabs, l=[]):
                 if value['isNodeTemplate'] == False:
                     if not node_types: # node_types should be at same level as topology_template
                         tabs -= 1
-                    if 'ontologies/tosca/tosca' in key:
-                        l = []
-                    elif 'https://www.sodalite.eu/ontologies/tosca/tosca.datatypes' in value['type']:
-                        l = data_types
-                    elif 'https://www.sodalite.eu/ontologies/tosca/tosca.capabilities' in value['type']:
-                        l = capability_types
-                    elif 'https://www.sodalite.eu/ontologies/tosca/tosca.artifacts' in value['type']:
-                        l = artifact_types
-                    elif 'https://www.sodalite.eu/ontologies/tosca/tosca.entity' in value['type']:
-                        l = entity_types
-                    elif 'https://www.sodalite.eu/ontologies/tosca/tosca.groups' in value['type']:
-                        l = group_types
-                    elif 'https://www.sodalite.eu/ontologies/tosca/tosca.interfaces' in value['type']:
-                        l = interface_types
-                    elif 'https://www.sodalite.eu/ontologies/tosca/tosca.policies' in value['type']:
-                        l = policy_types
-                    elif 'https://www.sodalite.eu/ontologies/tosca/tosca.relationships' in value['type']:
-                        l = relationship_types
-
                     else:
                         l = node_types
+                    for i in range(7):
+                        if types[i] in value['type']:
+                            l = l_of_l[i]
+                    if 'ontologies/tosca/tosca' in key:
+                        l = []
                 else:
                     l = topology_template
                 l.append('\n')
@@ -84,7 +77,8 @@ def parse_data(name, data):
     outfile.write('tosca_definitions_version: tosca_simple_yaml_1_0 \n\n')
     innerdicts(data, 2)
     s = []
-    for l in [artifact_types ,    capability_types,    data_types ,    entity_types ,    group_types, interface_types, policy_types, relationship_types, node_types, inputs, topology_template ]:
+    for l in l_of_l:
+    # [artifact_types ,    capability_types,    data_types ,    entity_types ,    group_types, interface_types, policy_types, relationship_types, node_types, inputs, topology_template ]:
         if len(l) > 1:
                 s.append(''.join(l) + '\n\n')
 
