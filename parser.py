@@ -51,8 +51,12 @@ def innerdicts(data, tabs, l=[]):
                 l.append('\n')
                 del value['isNodeTemplate']
             if "https://" in str(key): key = str(key)[str(key).rfind('/')+1:]
-            l. append('  '*(tabs)  + str(key) + ':  \n')
-            innerdicts(value, tabs+1, l)
+            if  key != 'specification' and  key  != 'topology_template_inputs':
+                l. append('  '*(tabs)  + str(key) + ':  \n')
+                innerdicts(value, tabs+1, l)
+            else:
+                innerdicts(value, tabs, l)
+
         else:
             if key == 'type' and '/tosca/tosca.' in value:
                 key = 'derived_from'
