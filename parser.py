@@ -26,7 +26,7 @@ l_of_l = [artifact_types, capability_types, data_types, entity_types, group_type
 def innerdicts(data, tabs, l=[]):
     for key, value in data.items():
         if key == "participants": participants = value
-        if isinstance(value,list):
+        if value and isinstance(value, list):
             if isinstance(value[0],dict):
                 v = {}
                 for i in value:
@@ -35,9 +35,11 @@ def innerdicts(data, tabs, l=[]):
         if isinstance(value, dict):
             if 'topology_template_inputs' in key:
                 l = inputs
+                tabs = 1
             elif 'isNodeTemplate' in value: # node template or node type
                 if value['isNodeTemplate'] == False:
                     l = node_types
+                    tabs = 1
                     for i in range(7):
                         if types[i] in value['type']:
                             l = l_of_l[i]
@@ -45,6 +47,7 @@ def innerdicts(data, tabs, l=[]):
                         l = []
                 else:
                     l = topology_template
+                    tabs = 2
                 l.append('\n')
                 del value['isNodeTemplate']
             if "https://" in str(key): key = str(key)[str(key).rfind('/')+1:]
@@ -53,7 +56,6 @@ def innerdicts(data, tabs, l=[]):
                 innerdicts(value, tabs+1, l)
             else:
                 innerdicts(value, tabs, l)
-
         else:
             if key == 'type' and '/tosca/tosca.' in value:
                 key = 'derived_from'
