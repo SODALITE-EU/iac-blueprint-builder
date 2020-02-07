@@ -1,27 +1,27 @@
 import re
 import json,os
-artifact_types = ['\n  artifact_types: \n\n']
-capability_types = ['\n  capability_types: \n\n']
-data_types = ['\n data_types: \n \n']
-entity_types = ['\n  entity_types: \n\n']
-group_types = ['\n  group_types: \n\n']
-interface_types = ['\n  interface_types: \n\n']
-policy_types = ['\n  policy_types: \n\n']
-relationship_types = ['\n  relationship_types: \n\n']
-topology_template = ['  node_templates: \n'] # header and template nodes
-node_types = ['\n node_types: \n \n' ] # type nodes
+artifact_types = ['\nartifact_types: \n\n']
+capability_types = ['\ncapability_types: \n\n']
+data_types = ['\ndata_types: \n \n']
+entity_types = ['\nentity_types: \n\n']
+group_types = ['\ngroup_types: \n\n']
+interface_types = ['\ninterface_types: \n\n']
+policy_types = ['\npolicy_types: \n\n']
+relationship_types = ['\nrelationship_types: \n\n']
+topology_template = ['  ', 'node_templates: \n'] # header and template nodes
+node_types = ['\nnode_types: \n \n' ] # type nodes
 
 participants = []
 ansible_files = []
-inputs = ['\n topology_template:\n\n']
+inputs = ['\ntopology_template:\n\n']
 
 
 types = ['https://www.sodalite.eu/ontologies/tosca/tosca.artifacts', 'https://www.sodalite.eu/ontologies/tosca/tosca.capabilities',
-'https://www.sodalite.eu/ontologies/tosca/tosca.datatypes',
-'https://www.sodalite.eu/ontologies/tosca/tosca.entity', 'https://www.sodalite.eu/ontologies/tosca/tosca.groups', 'https://www.sodalite.eu/ontologies/tosca/tosca.interfaces',
+'https://www.sodalite.eu/ontologies/tosca/tosca.datatypes', 'https://www.sodalite.eu/ontologies/tosca/tosca.entity',
+'https://www.sodalite.eu/ontologies/tosca/tosca.groups', 'https://www.sodalite.eu/ontologies/tosca/tosca.interfaces',
 'https://www.sodalite.eu/ontologies/tosca/tosca.policies', 'https://www.sodalite.eu/ontologies/tosca/tosca.relationships']
 
-l_of_l = [artifact_types ,    capability_types,    data_types ,    entity_types ,    group_types, interface_types, policy_types, relationship_types, node_types, inputs, topology_template]
+l_of_l = [artifact_types, capability_types, data_types, entity_types, group_types, interface_types, policy_types, relationship_types, node_types, inputs, topology_template]
 
 def innerdicts(data, tabs, l=[]):
     for key, value in data.items():
@@ -37,10 +37,7 @@ def innerdicts(data, tabs, l=[]):
                 l = inputs
             elif 'isNodeTemplate' in value: # node template or node type
                 if value['isNodeTemplate'] == False:
-                    if not node_types: # node_types should be at same level as topology_template
-                        tabs -= 1
-                    else:
-                        l = node_types
+                    l = node_types
                     for i in range(7):
                         if types[i] in value['type']:
                             l = l_of_l[i]
@@ -79,10 +76,9 @@ def parse_data(name, data):
     outfile = open(name+".yml", "w")
     # output file header generator
     outfile.write('tosca_definitions_version: tosca_simple_yaml_1_0 \n\n')
-    innerdicts(data, 2)
+    innerdicts(data, 1)
     s = []
     for l in l_of_l:
-    # [artifact_types ,    capability_types,    data_types ,    entity_types ,    group_types, interface_types, policy_types, relationship_types, node_types, inputs, topology_template ]:
         if len(l) > 1:
                 s.append(''.join(l) + '\n\n')
 
