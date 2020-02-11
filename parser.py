@@ -23,10 +23,14 @@ types = ['https://www.sodalite.eu/ontologies/tosca/tosca.artifacts', 'https://ww
 
 l_of_l = [artifact_types, capability_types, data_types, entity_types, group_types, interface_types, policy_types, relationship_types, node_types, inputs, topology_template]
 
-def innerdicts(data, tabs, l=[]):
+def innerdicts(data, tabs, l=[], inList=False):
     for key, value in data.items():
+        isList = False
         if key == "participants": participants = value
         if value and isinstance(value, list):
+            if key == 'requirements':
+                value = [{ ('- '+k.split('/')[-1]) : (v)  for (k, v) in c.items()} for c in value if isinstance(c, dict)]
+                isList = True
             if isinstance(value[0],dict):
                 v = {}
                 for i in value:
@@ -53,9 +57,12 @@ def innerdicts(data, tabs, l=[]):
             if "https://" in str(key): key = str(key)[str(key).rfind('/')+1:]
             if  key != 'specification' and  key  != 'topology_template_inputs':
                 l. append('  '*(tabs)  + str(key) + ':  \n')
-                innerdicts(value, tabs+1, l)
+                if inList:
+                    innerdicts(value, tabs+2, l, isList)
+                else:
+                    innerdicts(value, tabs+1, l, isList)
             else:
-                innerdicts(value, tabs, l)
+                innerdicts(value, tabs, l, isList)
         else:
             if key == 'type' and '/tosca/tosca.' in value:
                 key = 'derived_from'
@@ -67,6 +74,7 @@ def innerdicts(data, tabs, l=[]):
             elif ": " in str(value) and "description" == str(key):
                 value = str(value).replace(':', ' ')
             l. append('  '*(tabs) + str(key) + ': ' + str(value) + ' \n')
+
 
 def remove_extra_hierarchies(s):
     s=re.sub("(\s*)(.*?:)(\s+)(.*?):(\s+)(label:)(\s+)(.*?)(\s+)", r'\1\2 \4\9',  s, flags=re.M)
@@ -80,9 +88,11 @@ def parse_data(name, data):
     outfile.write('tosca_definitions_version: tosca_simple_yaml_1_0 \n\n')
     innerdicts(data, 1)
     s = []
+    # print(data_types)
     for l in l_of_l:
         if len(l) > 1:
                 s.append(''.join(l) + '\n\n')
+    # s.append(''.join(data_types) + '\n\n' + ''.join(node_types) + '\n\n' + ''.join(topology_template) + '\n\n')
 
     outfile.write(remove_extra_hierarchies(''.join(s)))
     print('TOSCA generated -------')
