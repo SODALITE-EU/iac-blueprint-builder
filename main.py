@@ -27,6 +27,7 @@ def parse():
             os.makedirs(foldername)
         outfile = open(os.path.join(foldername, filename), "w")
         outfile.write(str(requests.get(url).text))
+        outfile.close()
     print('Ansible files done ------- ')
     print('blueprint2json ongoing ------- ')
     os.system('python3 blueprint2json.py %s %s.yml > %s.json' % (body["name"], outpath, outpath))
