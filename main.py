@@ -1,4 +1,5 @@
 from flask import Flask, request
+import shutil
 import requests, os
 import blueprint2json
 from gevent.pywsgi import WSGIServer
@@ -32,6 +33,7 @@ def parse():
     print('blueprint2json ongoing ------- ')
     os.system('python3 blueprint2json.py %s %s.yml > %s.json' % (body["name"], outpath, outpath))
     payload = open('%s.json' % (outpath,), "r").read()
+    shutil.rmtree(workpath)
     return json.loads(requests.post(XOPERA_API, json=json.loads(payload)).text)
 
 if __name__ == '__main__':
