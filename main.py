@@ -1,5 +1,6 @@
 from flask import Flask, request
 import shutil
+from flask_swagger_ui import get_swaggerui_blueprint
 import requests, os
 import blueprint2json
 from gevent.pywsgi import WSGIServer
@@ -7,6 +8,18 @@ import parser
 import uuid
 import json
 app = Flask(__name__)
+
+SWAGGER_URL = '/docs'
+API_URL = '/static/swagger.json'
+SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={
+        'app_name': "SODALITE iac-blueprint-builder"
+    }
+)
+app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
+
 
 XOPERA_API = 'http://154.48.185.206:5000/manage'
 

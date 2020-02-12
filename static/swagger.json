@@ -1,0 +1,96 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "description": "SODALITE iac-blueprint-builder component",
+    "version": "1.0.0",
+    "title": "iac-blueprint-builder",
+    "contact": {
+      "email": "mehrnoosh.askarpour@gmail.com"
+      }
+    },
+    "servers": [
+     {
+       "url": "/"
+     }
+   ],
+   "tags": [
+     {
+       "name": "iac-blueprint-builder",
+       "description": "SODALITE JSON parser"
+     }
+   ],
+   "paths": {
+     "/parse": {
+        "post": {
+          "tags": [
+            "parse"
+          ],
+          "summary": "Parse JSON file and save blueprint to xOpera",
+          "requestBody": {
+            "description": "parse",
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/parseBody"
+                }
+              }
+            }
+          },
+          "produces": [
+            "application/json"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "schema": {
+                "$ref": "#/components/schemas/parseResponse"
+              }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+     "schemas": {
+       "parseBody": {
+         "type": "object",
+         "properties": {
+           "name": {
+             "type": "string",
+             "format": "string"
+           },
+           "data": {
+             "type": "SODALITE JSON",
+             "format": "SODALITE JSON"
+           }
+         }
+       },
+       "parseResponse": {
+         "type": "object",
+         "properties": {
+           "blueprint_token": {
+             "type": "string",
+             "format": "string"
+           },
+           "id": {
+             "type": "string",
+             "format": "string"
+           },
+           "message": {
+             "type": "string",
+             "format": "string"
+           },
+           "timestamp": {
+             "type": "string",
+             "format": "string"
+           },
+           "version_id": {
+             "type": "number",
+             "format": "number"
+           }
+         }
+       }
+     }
+   }
+ }
