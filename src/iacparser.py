@@ -81,12 +81,17 @@ def remove_extra_hierarchies(s):
     s=re.sub("(\s*)(.*?:)(\s+)(value:)(.*?)(\s+)(label:)(\s+)(.*?)(\s+)", r'\1\2 \5\10',  s, flags=re.M)
     return s
 
+
+def parse(data):
+    innerdicts(data, 1)
+    return ansible_files
+
 def parse_data(name, data):
     #create an output file
     outfile = open(name+".yml", "w")
     # output file header generator
     outfile.write('tosca_definitions_version: tosca_simple_yaml_1_0 \n\n')
-    innerdicts(data, 1)
+    parse(data)
     s = []
     # print(data_types)
     for l in l_of_l:
@@ -97,3 +102,4 @@ def parse_data(name, data):
     outfile.write(remove_extra_hierarchies(''.join(s)))
     print('TOSCA generated -------')
     return ansible_files
+

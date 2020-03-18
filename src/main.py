@@ -4,7 +4,7 @@ from flask_swagger_ui import get_swaggerui_blueprint
 import requests, os
 import blueprint2json
 from gevent.pywsgi import WSGIServer
-import parser
+import iacparser
 import uuid
 import json
 app = Flask(__name__)
@@ -44,9 +44,9 @@ def parse():
         outfile.close()
     print('Ansible files done ------- ')
     print('blueprint2json ongoing ------- ')
-    os.system('python3 blueprint2json.py %s %s.yml > %s.json' % (body["name"], outpath, outpath))
+    os.system('python3 src/blueprint2json.py %s %s.yml > %s.json' % (body["name"], outpath, outpath))
     payload = open('%s.json' % (outpath,), "r").read()
-    shutil.rmtree(workpath)
+    # return '{ "res" : "ok" }'
     return json.loads(requests.post(XOPERA_API, json=json.loads(payload)).text)
 
 if __name__ == '__main__':
