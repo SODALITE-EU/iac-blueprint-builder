@@ -10,7 +10,7 @@ pipeline {
         steps {
             sh "pip3 install -r requirements.txt"
             sh "pip3 install -e ."
-            sh "python3 -m pytest --pyargs -s ${WORKSPACE}/test"
+            sh "pyttest"
         }
     }
   }
