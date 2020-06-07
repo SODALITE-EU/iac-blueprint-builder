@@ -54,15 +54,32 @@ def innerdicts(data, tabs, l=[], inList=False):
                     tabs = 2
                 l.append('\n')
                 del value['isNodeTemplate']
-            if "https://" in str(key): key = str(key)[str(key).rfind('/')+1:]
-            if  key != 'specification' and  key  != 'topology_template_inputs':
-                l. append('  '*(tabs)  + str(key) + ':  \n')
-                if inList:
-                    innerdicts(value, tabs+2, l, isList)
-                else:
-                    innerdicts(value, tabs+1, l, isList)
+            if "Standard" in key:
+                l.append('  '*(tabs) + "Standard:"+ "\n")
+                if "specification" in value:
+                    l.append('  '*(tabs + 1) + "operations:"+ "\n")
+                    if "create" in value["specification"]:
+                        l.append('  '*(tabs + 2) + "create:"+ "\n")
+                        innerdicts(value["specification"]["create"], tabs+3, l, isList)
+                    if "delete" in value["specification"]:
+                        l.append('  '*(tabs + 2) + "delete:"+ "\n")
+                        innerdicts(value["specification"]["delete"], tabs+3, l, isList)
+                    if "type" in value["specification"]:
+                        s = value["specification"]["type"]
+                        for b in s:
+                            s = s[b]
+                        l.append('  '*(tabs + 1) + str("type") + ': '+  str(s['label']) +  "\n")
+                del(key)
             else:
-                innerdicts(value, tabs, l, isList)
+                if "https://" in str(key): key = str(key)[str(key).rfind('/')+1:]
+                if  key != 'specification' and  key  != 'topology_template_inputs':
+                    l. append('  '*(tabs)  + str(key) + ':  \n')
+                    if inList:
+                        innerdicts(value, tabs+2, l, isList)
+                    else:
+                        innerdicts(value, tabs+1, l, isList)
+                else:
+                    innerdicts(value, tabs, l, isList)
         else:
             if key == 'type' and '/tosca/tosca.' in value:
                 key = 'derived_from'
@@ -102,4 +119,3 @@ def parse_data(name, data):
     outfile.write(remove_extra_hierarchies(''.join(s)))
     print('TOSCA generated -------')
     return ansible_files
-
