@@ -1,5 +1,6 @@
 Flask==1.1.1
 gevent==1.4.0
 requests
+pyyaml
 flask_swagger_ui
 pytest
