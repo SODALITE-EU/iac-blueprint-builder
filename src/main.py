@@ -44,12 +44,11 @@ def parse():
         outfile.write(str(requests.get(url).text))
         outfile.close()
     print('Ansible files done ------- ')
-    print('blueprint2json ongoing ------- ')
-    # os.system('python3 src/blueprint2json.py %s %s.yml > %s.json' % (body["name"], outpath, outpath))
+    print('blueprint2CSAR ongoing ------- ')
     os.system('python3 src/blueprint2CSAR.py %s %s --entry-definitions %s.yml --output %s' % (body["name"] , outpath[:outpath.rfind('/')], body["name"], outpath))
-    payload = open('%s.zip' % (outpath,), "r").read()
-    # return '{ "res" : "ok" }'
-    # return json.loads(requests.post(XOPERA_API, json=json.loads(payload)).text)
+    files = [ ('CSAR', open('%s.zip' % (outpath,),'rb'))]
+    response = requests.post(XOPERA_API, files = files, verify = False)
+    return json.loads(response.text)
 
 if __name__ == '__main__':
     http_server = WSGIServer(('', 80), app)
