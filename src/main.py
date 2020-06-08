@@ -7,6 +7,7 @@ from gevent.pywsgi import WSGIServer
 import iacparser
 import uuid
 import json
+
 app = Flask(__name__)
 
 SWAGGER_URL = '/docs'
@@ -21,7 +22,7 @@ SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
 app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
 
 
-XOPERA_API = 'http://154.48.185.206:5000/manage'
+XOPERA_API = 'https://154.48.185.209/manage'
 
 @app.route('/parse', methods = ['POST'])
 def parse():
@@ -30,7 +31,7 @@ def parse():
     if not os.path.exists(workpath):
         os.makedirs(workpath)
     outpath = os.path.join(workpath, body["name"])
-    ansibles = parser.parse_data(outpath, body["data"])
+    ansibles = iacparser.parse_data(outpath, body["data"])
     print('Reading Ansible files ---------')
     for url in ansibles:
         print('Reading   %s ------- '%url)
@@ -44,10 +45,11 @@ def parse():
         outfile.close()
     print('Ansible files done ------- ')
     print('blueprint2json ongoing ------- ')
-    os.system('python3 src/blueprint2json.py %s %s.yml > %s.json' % (body["name"], outpath, outpath))
-    payload = open('%s.json' % (outpath,), "r").read()
+    # os.system('python3 src/blueprint2json.py %s %s.yml > %s.json' % (body["name"], outpath, outpath))
+    os.system('python3 src/blueprint2CSAR.py %s %s --entry-definitions %s.yml --output %s' % (body["name"] , outpath[:outpath.rfind('/')], body["name"], outpath))
+    payload = open('%s.zip' % (outpath,), "r").read()
     # return '{ "res" : "ok" }'
-    return json.loads(requests.post(XOPERA_API, json=json.loads(payload)).text)
+    # return json.loads(requests.post(XOPERA_API, json=json.loads(payload)).text)
 
 if __name__ == '__main__':
     http_server = WSGIServer(('', 80), app)
