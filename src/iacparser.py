@@ -94,7 +94,7 @@ def parse_data(name, data):
     #create an output file
     outfile = open(name+".yml", "w")
     # output file header generator
-    outfile.write('tosca_definitions_version: tosca_simple_yaml_1_0 \n\n')
+    outfile.write('tosca_definitions_version: tosca_simple_yaml_1_3  \n\n')
     parse(data)
     s = []
     # print(data_types)
