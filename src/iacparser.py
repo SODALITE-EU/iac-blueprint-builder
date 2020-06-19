@@ -55,7 +55,17 @@ def innerdicts(data, tabs, l=[], inList=False):
                 l.append('\n')
                 del value['isNodeTemplate']
             if "https://" in str(key): key = str(key)[str(key).rfind('/')+1:]
-            if  key != 'specification' and  key  != 'topology_template_inputs':
+            if "Standard" in key:
+                l.append('  '*(tabs) + "Standard: "+ "\n")
+                if 'specification' in value:
+                    l.append('  '*(tabs+1) + "type: tosca.interfaces.node.lifecycle.Standard "+ "\n")
+                    l.append('  '*(tabs+1) + "operations: "+ "\n")
+                    operations = ['create', 'delete']
+                    for a in operations:
+                        l.append('  '*(tabs+3) + a + ": \n")
+                        innerdicts(value['specification'][a], tabs+4, l, isList)
+
+            elif  key != 'specification' and  key  != 'topology_template_inputs':
                 l. append('  '*(tabs)  + str(key) + ':  \n')
                 if inList:
                     innerdicts(value, tabs+2, l, isList)
@@ -64,10 +74,6 @@ def innerdicts(data, tabs, l=[], inList=False):
             else:
                 innerdicts(value, tabs, l, isList)
         else:
-            if "Standard" in key:
-                l.append('  '*(tabs) + "Standard: "+ "\n")
-                innerdicts(value, tabs+1, l, isList)
-                del(key)
             if key == 'type' and '/tosca/tosca.' in value:
                 key = 'derived_from'
             if "Ansibles" in str(value):
