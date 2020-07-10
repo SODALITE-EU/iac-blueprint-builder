@@ -1,7 +1,8 @@
 from flask import Flask, request
 import shutil
 from flask_swagger_ui import get_swaggerui_blueprint
-import requests, os
+import requests
+import os
 import blueprint2json
 from gevent.pywsgi import WSGIServer
 import iacparser
@@ -21,10 +22,15 @@ SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
 )
 app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
 
+with open('config.json') as config:
+    config = json.load(config)
+    XOPERA_ENDPOINT = config['X_OPERA_ENDPOINT']
+    XOPERA_API = os.path.join(XOPERA_ENDPOINT, "manage")
 
-XOPERA_API = 'https://154.48.185.209/manage'
+print("starting with XOPERA endpoint:", XOPERA_API)
 
-@app.route('/parse', methods = ['POST'])
+
+@app.route('/parse', methods=['POST'])
 def parse():
     body = request.get_json()
     workpath = '%s-%d' % (body["name"], uuid.uuid1())
@@ -34,7 +40,7 @@ def parse():
     ansibles = iacparser.parse_data(outpath, body["data"])
     print('Reading Ansible files ---------')
     for url in ansibles:
-        print('Reading   %s ------- '%url)
+        print('Reading   %s ------- ' % url)
         temp = str(url).split('/')
         filename = temp[-1]
         foldername = os.path.join(workpath, *temp[4:-1])
@@ -45,10 +51,12 @@ def parse():
         outfile.close()
     print('Ansible files done ------- ')
     print('blueprint2CSAR ongoing ------- ')
-    os.system('python3 src/blueprint2CSAR.py %s %s --entry-definitions %s.yml --output %s' % (body["name"] , outpath[:outpath.rfind('/')], body["name"], outpath))
-    files = [ ('CSAR', open('%s.zip' % (outpath,),'rb'))]
-    response = requests.post(XOPERA_API, files = files, verify = False)
+    os.system('python3 src/blueprint2CSAR.py %s %s --entry-definitions %s.yml --output %s' %
+              (body["name"], outpath[:outpath.rfind('/')], body["name"], outpath))
+    files = [('CSAR', open('%s.zip' % (outpath,), 'rb'))]
+    response = requests.post(XOPERA_API, files=files, verify=False)
     return json.loads(response.text)
+
 
 if __name__ == '__main__':
     http_server = WSGIServer(('', 80), app)
