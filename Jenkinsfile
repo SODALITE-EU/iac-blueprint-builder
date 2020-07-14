@@ -1,6 +1,9 @@
 pipeline {
-  agent { label 'docker-slave' }
-  stages {
+agent { label 'docker-slave' }
+       environment {
+       docker_registry_ip = credentials('jenkins-docker-registry-ip')
+    }
+    stages {
     stage ('Pull repo code from github') {
       steps {
         checkout scm
@@ -13,6 +16,14 @@ pipeline {
             sh "python3 -m pytest --pyargs -s ${WORKSPACE}/test"
         }
     }
+    stage('build and push docker image') {
+            when { tag "*" }
+            steps {
+                sh "docker build -t iac-blueprint-builder ."
+                sh "docker tag iac-blueprint-builder $docker_registry_ip/iac-blueprint-builder"
+                sh "docker push $docker_registry_ip/iac-blueprint-builder"
+            }
+        }
   }
   post {
 	  failure {
