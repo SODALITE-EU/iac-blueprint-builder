@@ -17,7 +17,6 @@ agent { label 'docker-slave' }
         }
     }
     stage('build and push docker image') {
-            when { tag "*" }
             steps {
                 sh "docker build -t iac-blueprint-builder ."
                 sh "docker tag iac-blueprint-builder $docker_registry_ip/iac-blueprint-builder"
