@@ -22,7 +22,22 @@ agent { label 'docker-slave' }
                 sh "docker tag iac-blueprint-builder $docker_registry_ip/iac-blueprint-builder"
                 sh "docker push $docker_registry_ip/iac-blueprint-builder"
             }
-        }
+    }
+    stage('Push Docker image to DockerHub') {
+            when {
+                branch 'master'
+            }
+            steps {
+                withDockerRegistry(credentialsId: 'jenkins-sodalite.docker_token', url: '') {
+                    sh  """#!/bin/bash                       
+                            docker tag iac-blueprint-builder sodaliteh2020/iac-blueprint-builder:${BUILD_NUMBER}
+                            docker tag iac-blueprint-builder sodaliteh2020/iac-blueprint-builder
+                            docker push sodaliteh2020/iac-blueprint-builder:${BUILD_NUMBER}
+                            docker push sodaliteh2020/iac-blueprint-builder
+                        """
+                }
+            }
+    }
   }
   post {
 	  failure {
@@ -32,4 +47,4 @@ agent { label 'docker-slave' }
 	      slackSend (color: '#6d3be3', message: "FIXED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
 	  }
 	}
-  }
+}
