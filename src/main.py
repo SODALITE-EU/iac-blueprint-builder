@@ -9,10 +9,15 @@ import iacparser
 import uuid
 import json
 
-app = Flask(__name__)
 
 SWAGGER_URL = '/docs'
 API_URL = '/static/swagger.json'
+XOPERA_ENDPOINT_KEY = 'XOPERA_ENDPOINT'
+XOPERA_ENDPOINT_DEFAULT = 'https://154.48.185.209'
+CONFIG_PATH = 'config.json'
+
+app = Flask(__name__)
+
 SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     SWAGGER_URL,
     API_URL,
@@ -22,10 +27,19 @@ SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
 )
 app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
 
-with open('config.json') as config:
-    config = json.load(config)
-    XOPERA_ENDPOINT = config['X_OPERA_ENDPOINT']
-    XOPERA_API = os.path.join(XOPERA_ENDPOINT, "manage")
+
+
+XOPERA_ENDPOINT = os.getenv(XOPERA_ENDPOINT_KEY)
+
+if not XOPERA_ENDPOINT:
+    if os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH) as config:
+            config = json.load(config)
+            XOPERA_ENDPOINT = config[XOPERA_ENDPOINT_KEY]
+    else:
+        XOPERA_ENDPOINT = XOPERA_ENDPOINT_DEFAULT
+
+XOPERA_API = os.path.join(XOPERA_ENDPOINT, "manage")
 
 print("starting with XOPERA endpoint:", XOPERA_API)
 
