@@ -49,6 +49,6 @@ def test_parser():
 
     with open('test/fixture.json') as f:
         t = json.load(f)
-        # assert parse(t["data"]) == expected
-        # print(parse(t["data"]))
-        assert parse(t) == expected
+        parsed_data = parse(t)
+        print(parsed_data)
+        assert parsed_data == expected
