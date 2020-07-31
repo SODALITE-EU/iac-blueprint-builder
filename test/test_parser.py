@@ -47,7 +47,7 @@ def test_parser():
 
                 ['config.json.tmpl', 'ca.crt'])
 
-    with open('fixture.json') as f:
+    with open('test/fixture.json') as f:
         t = json.load(f)
         # assert parse(t["data"]) == expected
         # print(parse(t["data"]))
