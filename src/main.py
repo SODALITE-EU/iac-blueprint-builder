@@ -1,14 +1,13 @@
-from flask import Flask, request
-import shutil
-from flask_swagger_ui import get_swaggerui_blueprint
-import requests
-import os
-import blueprint2json
-from gevent.pywsgi import WSGIServer
-import iacparser
-import uuid
 import json
+import os
+import uuid
 
+import requests
+from flask import Flask, request
+from flask_swagger_ui import get_swaggerui_blueprint
+from gevent.pywsgi import WSGIServer
+
+from src import iacparser
 
 SWAGGER_URL = '/docs'
 API_URL = '/static/swagger.json'
@@ -26,8 +25,6 @@ SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     }
 )
 app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
-
-
 
 XOPERA_ENDPOINT = os.getenv(XOPERA_ENDPOINT_KEY)
 
@@ -51,12 +48,14 @@ def parse():
     if not os.path.exists(workpath):
         os.makedirs(workpath)
     outpath = os.path.join(workpath, body["name"])
-    ansibles = iacparser.parse_data(outpath, body["data"])
-    print('Reading Ansible files ---------')
-    for url in ansibles:
+    ansible_tuple = iacparser.parse_data(outpath, body["data"])
+    ansibles = ansible_tuple[0]
+    ansible_paths = ansible_tuple[1]
+    print('Downloading Ansible files ---------')
+    for i, url in enumerate(ansibles):
         print('Reading   %s ------- ' % url)
         temp = str(url).split('/')
-        filename = temp[-1]
+        filename = ansible_paths[i]
         foldername = os.path.join(workpath, *temp[4:-1])
         if not os.path.exists(foldername):
             os.makedirs(foldername)
@@ -64,6 +63,20 @@ def parse():
         outfile.write(str(requests.get(url).text))
         outfile.close()
     print('Ansible files done ------- ')
+    depen_files = ansible_tuple[2]
+    depen_paths = ansible_tuple[3]
+    print('Downloading Dependencies ---------')
+    for i, url in enumerate(depen_files):
+        print('Reading   %s ------- ' % url)
+        temp = str(url).split('/')
+        filename = depen_paths[i]
+        foldername = os.path.join(workpath, *temp[4:-1])
+        if not os.path.exists(foldername):
+            os.makedirs(foldername)
+        outfile = open(os.path.join(foldername, filename), "w")
+        outfile.write(str(requests.get(url).text))
+        outfile.close()
+    print('Dependencies are done loading ------- ')
     print('blueprint2CSAR ongoing ------- ')
     os.system('python3 src/blueprint2CSAR.py %s %s --entry-definitions %s.yml --output %s' %
               (body["name"], outpath[:outpath.rfind('/')], body["name"], outpath))
