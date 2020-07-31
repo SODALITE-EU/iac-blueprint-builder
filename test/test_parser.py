@@ -50,5 +50,9 @@ def test_parser():
     with open('test/fixture.json') as f:
         t = json.load(f)
         parsed_data = parse(t)
-        print(parsed_data)
-        assert parsed_data == expected
+        pds = []
+        exs = []
+        for i in range(0, 3):
+            pds.append(set(parsed_data[i]))
+            exs.append(set(expected[i]))
+        assert exs == pds
