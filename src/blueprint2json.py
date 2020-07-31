@@ -120,7 +120,8 @@ def main(args):
     path_to_TOSCA_yaml = Path(args.tosca)
     path_to_template = path_to_TOSCA_yaml.parent
 
-    deployment = Deployment(id=deploy_id, template=path_to_template, tosca=path_to_TOSCA_yaml, openrc=args.config_script)
+    deployment = Deployment(id=deploy_id, template=path_to_template, tosca=path_to_TOSCA_yaml,
+                            openrc=args.config_script)
 
     json_obj = deployment.to_dict()
     output = json.dumps(json_obj, indent=2, sort_keys=False)
