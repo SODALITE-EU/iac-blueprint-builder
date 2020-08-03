@@ -7,7 +7,7 @@ from flask import Flask, request
 from flask_swagger_ui import get_swaggerui_blueprint
 from gevent.pywsgi import WSGIServer
 
-from src import iacparser
+import iacparser
 
 SWAGGER_URL = '/docs'
 API_URL = '/static/swagger.json'
