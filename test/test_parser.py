@@ -51,9 +51,6 @@ def test_parser():
                  'http://160.40.52.200:8084/Ansibles/b8ddac49-6c25-4815-b6e1-2029590f1fd6'],
 
                 ['artifacts/egi_refresh_token.yml',
-                 'artifacts/egi_refresh_token.yml',
-                 'artifacts/egi_refresh_token.yml',
-                 'artifacts/egi_refresh_token.yml',
                  'artifacts/ca.key',
                  'artifacts/ca.crt',
                  'artifacts/config.json.tmpl'])
