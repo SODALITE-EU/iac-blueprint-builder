@@ -49,33 +49,11 @@ def parse():
         os.makedirs(workpath)
     outpath = os.path.join(workpath, body["name"])
     ansible_tuple = iacparser.parse_data(outpath, body["data"])
-    ansibles = ansible_tuple[0]
-    ansible_paths = ansible_tuple[1]
     print('Downloading Ansible files ---------')
-    for i, url in enumerate(ansibles):
-        print('Reading   %s ------- ' % url)
-        temp = str(url).split('/')
-        filename = ansible_paths[i]
-        foldername = os.path.join(workpath, *temp[4:-1])
-        if not os.path.exists(foldername):
-            os.makedirs(foldername)
-        outfile = open(os.path.join(foldername, filename), "w")
-        outfile.write(str(requests.get(url).text))
-        outfile.close()
+    download_dependencies(ansible_tuple[0], ansible_tuple[1], workpath)
     print('Ansible files done ------- ')
-    depen_files = ansible_tuple[2]
-    depen_paths = ansible_tuple[3]
     print('Downloading Dependencies ---------')
-    for i, url in enumerate(depen_files):
-        print('Reading   %s ------- ' % url)
-        temp = str(url).split('/')
-        filename = depen_paths[i]
-        foldername = os.path.join(workpath, *temp[4:-1])
-        if not os.path.exists(foldername):
-            os.makedirs(foldername)
-        outfile = open(os.path.join(foldername, filename), "w")
-        outfile.write(str(requests.get(url).text))
-        outfile.close()
+    download_dependencies(ansible_tuple[2], ansible_tuple[3], workpath)
     print('Dependencies are done loading ------- ')
     print('blueprint2CSAR ongoing ------- ')
     os.system('python3 src/blueprint2CSAR.py %s %s --entry-definitions %s.yml --output %s' %
@@ -83,6 +61,18 @@ def parse():
     files = [('CSAR', open('%s.zip' % (outpath,), 'rb'))]
     response = requests.post(XOPERA_API, files=files, verify=False)
     return json.loads(response.text)
+
+
+def download_dependencies(urls, filenames, workpath):
+    for url, filename in zip(urls, filenames):
+        print('Reading   %s ------- ' % url)
+        temp = str(filename).split('/')
+        foldername = os.path.join(workpath, *temp[:-1])
+        if not os.path.exists(foldername):
+            os.makedirs(foldername)
+        outfile = open(os.path.join(workpath, filename), "w")
+        outfile.write(str(requests.get(url).text))
+        outfile.close()
 
 
 if __name__ == '__main__':
