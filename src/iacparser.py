@@ -203,7 +203,7 @@ def innerdicts(data, tabs, l=[], inList=False):
                 l.append('  ' * tabs + 'file: ' + str(value) + ' \n')
                 l.append('  ' * tabs + 'type: tosca.artifacts.Implementation \n')
             else:
-                if key == 'type' and '/tosca/tosca.' in value:
+                if key == 'type' and not (l == topology_template or l == inputs):
                     key = 'derived_from'
                 if "https://" in str(value):
                     value = str(value)[str(value).rfind('/') + 1:]
