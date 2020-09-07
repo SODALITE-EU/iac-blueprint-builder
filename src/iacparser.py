@@ -100,9 +100,9 @@ def innerdicts(data, tabs, l=[], inList=False):
                 l.append('  ' * tabs + "Standard: " + "\n")
                 if 'specification' in value:
                     l.append('  ' * (tabs + 1) + "type: tosca.interfaces.node.lifecycle.Standard " + "\n")
-                    l.append('  ' * (tabs + 1) + "operations: " + "\n")
                     operations = ['create', 'delete']
                     if 'operations' in value['specification'].keys():
+                        l.append('  ' * (tabs + 1) + "operations: " + "\n")
                         for operation in operations:
                             # implementations don't need to implement all steps anymore
                             if operation in value['specification']['operations'].keys():
