@@ -54,7 +54,7 @@ def reset_template_data():
     global node_types
     node_types = ['\nnode_types: \n \n']  # type nodes
 
-    global participants 
+    global participants
     participants = []
     global ansible_urls
     ansible_urls = []
@@ -276,7 +276,7 @@ def parse_data(name, data):
     # create an output file
     outfile = open(name + ".yml", "w")
     # output file header generator
-    outfile.write('tosca_definitions_version: tosca_simple_yaml_1_3  \n\n')    
+    outfile.write('tosca_definitions_version: tosca_simple_yaml_1_3  \n\n')
     parse(data)
     s = []
     # print(data_types)
