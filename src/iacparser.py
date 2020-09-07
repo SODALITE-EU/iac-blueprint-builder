@@ -1,24 +1,6 @@
 import os
 import re
 
-artifact_types = ['\nartifact_types: \n\n']
-capability_types = ['\ncapability_types: \n\n']
-data_types = ['\ndata_types: \n \n']
-entity_types = ['\nentity_types: \n\n']
-group_types = ['\ngroup_types: \n\n']
-interface_types = ['\ninterface_types: \n\n']
-policy_types = ['\npolicy_types: \n\n']
-relationship_types = ['\nrelationship_types: \n\n']
-topology_template = ['  ', 'node_templates: \n']  # header and template nodes
-node_types = ['\nnode_types: \n \n']  # type nodes
-
-participants = []
-ansible_urls = []
-ansible_paths = []
-dependency_urls = []
-dependency_paths = []
-inputs = ['\ntopology_template:\n\n']
-
 types = ['https://www.sodalite.eu/ontologies/tosca/tosca.artifacts',
          'https://www.sodalite.eu/ontologies/tosca/tosca.capabilities',
          'https://www.sodalite.eu/ontologies/tosca/tosca.datatypes',
@@ -28,9 +10,66 @@ types = ['https://www.sodalite.eu/ontologies/tosca/tosca.artifacts',
          'https://www.sodalite.eu/ontologies/tosca/tosca.policies',
          'https://www.sodalite.eu/ontologies/tosca/tosca.relationships']
 
-l_of_l = [artifact_types, capability_types, data_types, entity_types, group_types, interface_types, policy_types,
-          relationship_types, node_types, inputs, topology_template]
+artifact_types = []
+capability_types = []
+data_types = []
+entity_types = []
+group_types = []
+interface_types = []
+policy_types = []
+relationship_types = []
+topology_template = []
+node_types = []
 
+participants = []
+ansible_urls = []
+ansible_paths = []
+dependency_urls = []
+dependency_paths = []
+inputs = []
+
+l_of_l = []
+
+def reset_template_data():
+    # in order to not share template data between API invocations
+    # consider refactoring this part in future releases
+    global artifact_types
+    artifact_types = ['\nartifact_types: \n\n']
+    global capability_types
+    capability_types = ['\ncapability_types: \n\n']
+    global data_types
+    data_types = ['\ndata_types: \n \n']
+    global entity_types
+    entity_types = ['\nentity_types: \n\n']
+    global group_types
+    group_types = ['\ngroup_types: \n\n']
+    global interface_types
+    interface_types = ['\ninterface_types: \n\n']
+    global policy_types
+    policy_types = ['\npolicy_types: \n\n']
+    global relationship_types
+    relationship_types = ['\nrelationship_types: \n\n']
+    global topology_template
+    topology_template = ['  ', 'node_templates: \n']  # header and template nodes
+    global node_types
+    node_types = ['\nnode_types: \n \n']  # type nodes
+
+    global participants
+    participants = []
+    global ansible_urls
+    ansible_urls = []
+    global ansible_paths
+    ansible_paths = []
+    global dependency_urls
+    dependency_urls = []
+    global dependency_paths
+    dependency_paths = []
+    global inputs
+    inputs = ['\ntopology_template:\n\n']
+
+    global l_of_l
+    l_of_l = [artifact_types, capability_types, data_types, entity_types, group_types, interface_types, policy_types,
+          relationship_types, node_types, inputs, topology_template]
 
 def innerdicts(data, tabs, l=[], inList=False):
     for key, value in data.items():
@@ -100,9 +139,9 @@ def innerdicts(data, tabs, l=[], inList=False):
                 l.append('  ' * tabs + "Standard: " + "\n")
                 if 'specification' in value:
                     l.append('  ' * (tabs + 1) + "type: tosca.interfaces.node.lifecycle.Standard " + "\n")
-                    l.append('  ' * (tabs + 1) + "operations: " + "\n")
                     operations = ['create', 'delete']
                     if 'operations' in value['specification'].keys():
+                        l.append('  ' * (tabs + 1) + "operations: " + "\n")
                         for operation in operations:
                             # implementations don't need to implement all steps anymore
                             if operation in value['specification']['operations'].keys():
@@ -228,6 +267,7 @@ def remove_extra_hierarchies(s):
 
 
 def parse(data):
+    reset_template_data()
     innerdicts(data, 1)
     return ansible_urls, ansible_paths, dependency_urls, dependency_paths
 
