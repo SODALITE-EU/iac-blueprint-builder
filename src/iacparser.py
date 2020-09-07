@@ -18,8 +18,8 @@ group_types = []
 interface_types = []
 policy_types = []
 relationship_types = []
-topology_template = [] 
-node_types = []  
+topology_template = []
+node_types = []
 
 participants = []
 ansible_urls = []
@@ -33,7 +33,7 @@ l_of_l = []
 def reset_template_data():
     # in order to not share template data between API invocations
     # consider refactoring this part in future releases
-    global artifact_types 
+    global artifact_types
     artifact_types = ['\nartifact_types: \n\n']
     global capability_types
     capability_types = ['\ncapability_types: \n\n']
@@ -138,7 +138,7 @@ def innerdicts(data, tabs, l=[], inList=False):
             if "Standard" in key:
                 l.append('  ' * tabs + "Standard: " + "\n")
                 if 'specification' in value:
-                    l.append('  ' * (tabs + 1) + "type: tosca.interfaces.node.lifecycle.Standard " + "\n")                   
+                    l.append('  ' * (tabs + 1) + "type: tosca.interfaces.node.lifecycle.Standard " + "\n")
                     operations = ['create', 'delete']
                     if 'operations' in value['specification'].keys():
                         l.append('  ' * (tabs + 1) + "operations: " + "\n")
@@ -267,6 +267,7 @@ def remove_extra_hierarchies(s):
 
 
 def parse(data):
+    reset_template_data()
     innerdicts(data, 1)
     return ansible_urls, ansible_paths, dependency_urls, dependency_paths
 
@@ -275,8 +276,7 @@ def parse_data(name, data):
     # create an output file
     outfile = open(name + ".yml", "w")
     # output file header generator
-    outfile.write('tosca_definitions_version: tosca_simple_yaml_1_3  \n\n')
-    reset_template_data()
+    outfile.write('tosca_definitions_version: tosca_simple_yaml_1_3  \n\n')    
     parse(data)
     s = []
     # print(data_types)
