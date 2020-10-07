@@ -9,13 +9,6 @@ agent { label 'docker-slave' }
                 checkout scm
             }
         }
-        stage('test iac-blueprint-builder') {
-            steps {
-                sh "pip3 install -r requirements.txt"
-                sh "pip3 install -e ."
-                sh "python3 -m pytest --pyargs -s ${WORKSPACE}/test"
-            }
-        }
         stage('build and push docker image') {
                 steps {
                     sh "docker build -t iac-blueprint-builder ."
