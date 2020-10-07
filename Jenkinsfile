@@ -58,7 +58,6 @@ agent { label 'docker-slave' }
                       sh "${scannerHome}/bin/sonar-scanner"
             }
         }
-    }
   }
   post {
 	  failure {
