@@ -39,6 +39,27 @@ agent { label 'docker-slave' }
             }
     }
   }
+  stage('test iac-blueprint-builder') {
+        steps {
+            sh  """ #!/bin/bash 
+                    pip3 install -r requirements.txt
+                    pip3 install -e .
+                    python3 -m pytest --pyargs -s ${WORKSPACE}/test --junitxml="results.xml" --cov=components --cov=models --cov-report xml test/
+                """
+            junit 'results.xml'
+        }
+  }
+  stage('SonarQube analysis'){
+        environment {
+          scannerHome = tool 'SonarQubeScanner'
+        }
+        steps {
+            withSonarQubeEnv('SonarCloud') {
+                      sh "${scannerHome}/bin/sonar-scanner"
+            }
+        }
+    }
+  }
   post {
 	  failure {
 	      slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
