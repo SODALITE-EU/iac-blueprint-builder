@@ -36,7 +36,7 @@ agent { label 'docker-slave' }
                     sh  """ #!/bin/bash 
                             pip3 install -r requirements.txt
                             pip3 install -e .
-                            python3 -m pytest --pyargs -s ${WORKSPACE}/test --junitxml="results.xml" --cov=components --cov=models --cov-report xml test/
+                            python3 -m pytest --pyargs -s ${WORKSPACE}/test --junitxml="results.xml" --cov=src --cov-report xml test/
                         """
                     junit 'results.xml'
                 }
