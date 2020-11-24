@@ -5,9 +5,8 @@ import uuid
 import requests
 from flask import Flask, request
 from flask_swagger_ui import get_swaggerui_blueprint
-from gevent.pywsgi import WSGIServer
 
-import iacparser
+import src.iacparser
 
 SWAGGER_URL = '/docs'
 API_URL = '/static/swagger.json'
@@ -75,6 +74,8 @@ def download_dependencies(urls, filenames, workpath):
         outfile.close()
 
 
+'''
 if __name__ == '__main__':
     http_server = WSGIServer(('', 80), app)
     http_server.serve_forever()
+'''
