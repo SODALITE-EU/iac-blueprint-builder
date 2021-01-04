@@ -149,12 +149,14 @@ def innerdicts(data, tabs, l=[], inList=False):
             if "optimization" in value:
                 opt_json_str = value['optimization']
                 if opt_json_str:
-                    opt_image = get_opt_image(opt_json_str)
-                    if opt_image:
-                        for property in value['properties']:
-                            values = list(property.values())
-                            if values and values[0].get("label", "") in valid_container_image_properties:
+                    for property in value['properties']:
+                        values = list(property.values())
+                        if values and values[0].get("label", "") in valid_container_image_properties:
+                            opt_image = get_opt_image(opt_json_str)
+                            if opt_image:
                                 values[0]["value"] = opt_image
+                    
+                        
 
                 del value['optimization']
             
