@@ -1,7 +1,9 @@
 # import unittest
 # target = __import__("src")
 import json
-from src import parse
+import yaml
+
+import src.iacparser as parser
 
 
 def test_parser():
@@ -57,10 +59,41 @@ def test_parser():
 
     with open('test/fixture.json') as f:
         t = json.load(f)
-        parsed_data = parse(t)
+        parsed_data = parser.parse(t)
         pds = []
         exs = []
         for i in range(0, 3):
             pds.append(set(parsed_data[i]))
             exs.append(set(expected[i]))
         assert exs == pds
+
+def test_parser_opt():
+    # test output
+    test_output = "/tmp/test_output"
+
+    # this component has optimisation field
+    opt_component = "snow-skyline-extractor"
+    # expected container for $opt_component
+    opt_expected_container_runtime = "modakopt/modak:tensorflow-2.1-gpu-src"
+
+    # this component has optimisation field, but optimised container not found
+    not_found_opt_component = "snow-skyline-alignment"
+    # expected container for $not_found_opt_component
+    not_found_opt_expected_container_runtime = "snow-skyline-alignment:latest"
+
+    with open('test/fixture.json') as f:
+        t = json.load(f)
+        parser.parse_data(test_output, t)
+
+        with open(test_output + ".yml") as output_yaml:
+            service = yaml.load(output_yaml)
+
+        opt_component_template = service.get("topology_template").get("node_templates").get(opt_component)
+        image_name = opt_component_template.get("properties").get("image_name")
+
+        assert image_name == opt_expected_container_runtime
+
+        not_found_opt_component_template = service.get("topology_template").get("node_templates").get(not_found_opt_component)
+        image_name = not_found_opt_component_template.get("properties").get("image_name")
+
+        assert image_name == not_found_opt_expected_container_runtime

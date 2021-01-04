@@ -134,7 +134,8 @@
           }
         }
       }
-    ]
+    ],
+    "optimization": "\"{ \"name\": \"ai_training.tensor_flow\", \"optimization\": { \"enable_opt_build\": true, \"enable_autotuning\": true, \"app_type\":\"ai_training\", \"opt_build\": { \"cpu_type\": \"x86\", \"acc_type\": \"nvidia\" }, \"autotuning\": { \"tuner\": \"cresta\", \"input\": \"begin parameters begin typing int NB end typing begin constraints range NB 80. 90, 100, 120, 140 end constraints end parameters begin build command: make -DNB=$NB end build begin run command: ./solver end run\" }, \"app_type-ai_training\": { \"config\": {  \"ai_framework\": \"tensorflow\" ,\"type\": \"translation\" ,\"distributed_training\": true ,\"layers\": 6 ,\"parameters\": 872684236 }, \"data\": {  \"location\": \"/some/data\"  ,\"basedata\": \"imagenet\"  ,\"size\": 67  ,\"count\": 4389  ,\"etl\": {  \"prefetch\": 100  ,\"cache\": 100 } } ,\"ai_framework-tensorflow\": {  \"version\": \"2.1\"  ,\"xla\": false } } } } \""
   },
   "https://www.sodalite.eu/ontologies/workspace/1/vbeit9auui3d3j0tdekbljfndl/snow-docker-host-2": {
     "type": "https://www.sodalite.eu/ontologies/workspace/1/i5rq2l9e5at501mve07ubclavq/sodalite.nodes.DockerHost",
@@ -1561,7 +1562,8 @@
           }
         }
       }
-    ]
+    ],
+    "optimization": "\"{ \"name\": \"ai_training.tensor_flow\", \"optimization\": { \"enable_opt_build\": true, \"enable_autotuning\": true, \"app_type\":\"ai_training\", \"opt_build\": { \"cpu_type\": \"x86\", \"acc_type\": \"nvidia\" }, \"autotuning\": { \"tuner\": \"cresta\", \"input\": \"begin parameters begin typing int NB end typing begin constraints range NB 80. 90, 100, 120, 140 end constraints end parameters begin build command: make -DNB=$NB end build begin run command: ./solver end run\" }, \"app_type-ai_training\": { \"config\": {  \"ai_framework\": \"tensorflow\" ,\"type\": \"translation\" ,\"distributed_training\": true ,\"layers\": 6 ,\"parameters\": 872684236 }, \"data\": {  \"location\": \"/some/data\"  ,\"basedata\": \"imagenet\"  ,\"size\": 67  ,\"count\": 4389  ,\"etl\": {  \"prefetch\": 100  ,\"cache\": 100 } } ,\"ai_framework-tensorflow\": {  \"version\": \"2.1\"  ,\"xla\": true } } } } \""
   },
   "https://www.sodalite.eu/ontologies/workspace/1/vbeit9auui3d3j0tdekbljfndl/snow-docker-network": {
     "type": "https://www.sodalite.eu/ontologies/workspace/1/kijggphp9tsu7g26a5ve5e8ck0/sodalite.nodes.DockerNetwork",

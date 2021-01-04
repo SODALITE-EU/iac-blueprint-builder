@@ -1,5 +1,7 @@
 import os
 import re
+import json
+import requests
 
 types = ['https://www.sodalite.eu/ontologies/tosca/tosca.artifacts',
          'https://www.sodalite.eu/ontologies/tosca/tosca.capabilities',
@@ -29,6 +31,12 @@ dependency_paths = []
 inputs = []
 
 l_of_l = []
+
+# TODO: can be regex?
+valid_container_image_properties = ["image", "image_name"]
+
+MODAK_ENDPOINT_DEFAULT = "http://77.231.202.209:5000"
+MODAK_ENDPOINT = os.getenv("MODAK_ENDPOINT", MODAK_ENDPOINT_DEFAULT)
 
 def reset_template_data():
     # in order to not share template data between API invocations
@@ -116,6 +124,7 @@ def innerdicts(data, tabs, l=[], inList=False):
                     v.update(i)
                 value = v
         if isinstance(value, dict):
+            orig_key = key
             if 'topology_template_inputs' in key:
                 l = inputs
                 tabs = 1
@@ -135,6 +144,20 @@ def innerdicts(data, tabs, l=[], inList=False):
                 del value['isNodeTemplate']
             if "https://" in str(key):
                 key = str(key)[str(key).rfind('/') + 1:]
+
+            # handling optimisations
+            if "optimization" in value:
+                opt_json_str = value['optimization']
+                if opt_json_str:
+                    opt_image = get_opt_image(opt_json_str)
+                    if opt_image:
+                        for property in value['properties']:
+                            values = list(property.values())
+                            if values and values[0].get("label", "") in valid_container_image_properties:
+                                values[0]["value"] = opt_image
+
+                del value['optimization']
+            
             if "Standard" in key:
                 l.append('  ' * tabs + "Standard: " + "\n")
                 if 'specification' in value:
@@ -258,6 +281,23 @@ def extract_dependency(dep, l, tabs, origin=""):
         dependency_paths.append(joined_path)
     l.append("{}- file: {} \n".format('  ' * (tabs + 2), joined_path))
     l.append("{}type: {} \n".format('  ' * (tabs + 3), "tosca.artifacts.File"))
+
+def get_opt_image(opt_json_string: str):
+    opt_json_string = opt_json_string.strip('\"')
+    opt = json.loads(opt_json_string)
+    MODAK_IMAGE_API = os.path.join(MODAK_ENDPOINT, "get_image")
+    response = requests.post(
+        MODAK_IMAGE_API,
+        headers={ "Content-Type": "application/json" },
+        json={ "job": { "optimisation": opt.get("optimization", {}) } }
+    )
+    if response.status_code != 200:
+        print("Optimisation request error")
+        return ""
+
+    data = response.json()
+    image = data.get("job", {}).get("container_runtime", "").split("://", 1)
+    return image[1] if len(image) > 1 else image[0]
 
 
 def remove_extra_hierarchies(s):
