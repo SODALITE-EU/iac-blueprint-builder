@@ -155,9 +155,7 @@ def innerdicts(data, tabs, l=[], inList=False):
                             opt_image = get_opt_image(opt_json_str)
                             if opt_image:
                                 values[0]["value"] = opt_image
-                    
-                        
-
+                                
                 del value['optimization']
             
             if "Standard" in key:
