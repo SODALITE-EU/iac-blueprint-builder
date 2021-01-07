@@ -1,290 +1,248 @@
-import os
+import yaml
+import json
 import re
+import os 
+import pathlib
 
-types = ['https://www.sodalite.eu/ontologies/tosca/tosca.artifacts',
-         'https://www.sodalite.eu/ontologies/tosca/tosca.capabilities',
-         'https://www.sodalite.eu/ontologies/tosca/tosca.datatypes',
-         'https://www.sodalite.eu/ontologies/tosca/tosca.entity',
-         'https://www.sodalite.eu/ontologies/tosca/tosca.groups',
-         'https://www.sodalite.eu/ontologies/tosca/tosca.interfaces',
-         'https://www.sodalite.eu/ontologies/tosca/tosca.policies',
-         'https://www.sodalite.eu/ontologies/tosca/tosca.relationships']
 
-artifact_types = []
-capability_types = []
-data_types = []
-entity_types = []
-group_types = []
-interface_types = []
-policy_types = []
-relationship_types = []
-topology_template = []
-node_types = []
+class Context:
+    def __init__(self, section):
+        self.section = section
 
-participants = []
-ansible_urls = []
-ansible_paths = []
-dependency_urls = []
-dependency_paths = []
-inputs = []
 
-l_of_l = []
+class AadmPreprocessor:
+    # regex to check if string is URL
+    url_regex = r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"
+    # list of keys to convert 
+    convert_list_dict = ["properties", "attributes", "interfaces", "capabilities"]  
 
-def reset_template_data():
-    # in order to not share template data between API invocations
-    # consider refactoring this part in future releases
-    global artifact_types
-    artifact_types = ['\nartifact_types: \n\n']
-    global capability_types
-    capability_types = ['\ncapability_types: \n\n']
-    global data_types
-    data_types = ['\ndata_types: \n \n']
-    global entity_types
-    entity_types = ['\nentity_types: \n\n']
-    global group_types
-    group_types = ['\ngroup_types: \n\n']
-    global interface_types
-    interface_types = ['\ninterface_types: \n\n']
-    global policy_types
-    policy_types = ['\npolicy_types: \n\n']
-    global relationship_types
-    relationship_types = ['\nrelationship_types: \n\n']
-    global topology_template
-    topology_template = ['  ', 'node_templates: \n']  # header and template nodes
-    global node_types
-    node_types = ['\nnode_types: \n \n']  # type nodes
+    # data in AADM JSON nodes is presented as lists
+    # some lists must be converted to maps (dictionaries)
+    # in order to be TOSCA complaint 
+    @classmethod
+    def convert_list(cls, key, data):
+        if isinstance(data, list) and key in cls.convert_list_dict:
+            result = {}
+            for item in data:
+                if isinstance(item, dict):
+                   for key_int, value in item.items(): 
+                       result[key_int] = value
+            return True, key, result
+        return False, key, data
 
-    global participants
-    participants = []
-    global ansible_urls
-    ansible_urls = []
-    global ansible_paths
-    ansible_paths = []
-    global dependency_urls
-    dependency_urls = []
-    global dependency_paths
-    dependency_paths = []
-    global inputs
-    inputs = ['\ntopology_template:\n\n']
+    @classmethod
+    def collapse_labels(cls, key, data):
+        label = AadmPreprocessor.get_type(key)
+        if (isinstance(data, dict) 
+                and "label" in data
+                and data["label"] == label):
+            del data["label"]
+            return True, label, data 
+        return False, key, data        
 
-    global l_of_l
-    l_of_l = [artifact_types, capability_types, data_types, entity_types, group_types, interface_types, policy_types,
-          relationship_types, node_types, inputs, topology_template]
+    # replace value maps with values
+    @staticmethod
+    def collapse_values(key, data):
+        if (isinstance(data, dict) 
+                and "value" in data
+                and len(data) == 1):
+            return True, key, data["value"]   
+        return False, key, data 
 
-def innerdicts(data, tabs, l=[], inList=False):
-    for key, value in data.items():
-        isList = False
-        if key == "participants": participants = value
-        if key == 'valid_source_types' and str(value) == '{}':
-            value = []  # convert badly parsed empty lists to lists
-        if value and isinstance(value, list):
-            if key == 'requirements':
-                dependency_parse_failed = True
-                for requirement in value:
-                    if isinstance(requirement, dict):
-                        subrequirement = requirement[list(dict(requirement).keys())[0]]
-                        if "value" in requirement[list(dict(requirement).keys())[0]]:
-                            item = subrequirement["value"]
-                            if isinstance(item, dict):
-                                dep_type = item["label"]
-                                subitem = item[list(dict(item).keys())[0]]
-                                if "label" in subitem:
-                                    if dependency_parse_failed:
-                                        l.append('  ' * tabs + "requirements: " + "\n")
-                                        dependency_parse_failed = False
-                                    dep_node = subitem["label"]
-                                    l.append('  ' * (tabs + 1) + "- " + dep_type + ": " + dep_node + "\n")
-                if dependency_parse_failed is True:
-                    value = [{('- ' + k.split('/')[-1]): (v) for (k, v) in c.items()} for c in value if
-                             isinstance(c, dict)]
-                    isList = True
+    # in node type definitions specifications 
+    # should be just replaced with its content map
+    @staticmethod
+    def collapse_specifications(key, data):
+        if (isinstance(data, dict) 
+                and "specification" in data
+                and isinstance(data["specification"], dict)):
+            spec = data["specification"]    
+            del data["specification"] 
+            data.update(spec)
+            return True, key, data 
+        return False, key, data           
+
+    #remove replace empty dictionaries with key values
+    @staticmethod
+    def collapse_empty_dict(key, data):
+        if (isinstance(data, dict) 
+                and len(data) == 1):
+            check = next(iter(data))
+            if isinstance(data[check], dict) and len(data[check]) == 0:
+                return True, key, check 
+        return False, key, data  
+
+    # extract type values from URLs
+    @classmethod
+    def reduce_type(cls, key, data):
+        short_type = cls.get_type(key)
+        if short_type != key:
+            return True, short_type, data 
+        return False, key, data       
+
+    #extact type out of URL
+    @classmethod
+    def get_type(cls, type_str):        
+        if re.search(cls.url_regex, type_str) is None:
+            return type_str
+        return type_str.split("/")[-1]                                           
+
+    #recursively traverse the tree sequentially applying preprocessing rules
+    @classmethod
+    def preprocess_data(cls, key, data):
+        preprocess_list = [
+            cls.preprocess_data, 
+            cls.convert_list, 
+            cls.collapse_labels, 
+            cls.collapse_values, 
+            cls.collapse_specifications,
+            cls.collapse_empty_dict,
+            cls.reduce_type]
+
+        changed = False
+        result = data
+        if isinstance(data, list):
+            result = []
+            for item in data:
+                new_changed, new_key, new_value = cls.preprocess_data(None, item)
+                changed = changed or new_changed
+                result.append(new_value)
+        if isinstance(data, dict):
+            result = {}
+            for key_int, value in data.items():
+                result[key_int] = value
+                for step in preprocess_list:
+                    new_changed, new_key, new_value = step(key_int, value)
+                    changed = changed or new_changed
+                    if new_changed:
+                        del result[key_int]
+                        result[new_key] = new_value
+                        break
+        return changed, key, result    
+
+    @classmethod
+    def preprocess_aadm(cls, aadm): 
+        result = {}  
+        changed = True
+        result = aadm.copy()
+        while changed:
+            # preprocess multiple times until no changes are applied to data
+            changed = False
+            for key, value in result.items():
+                new_changed, new_key, new_value = cls.preprocess_data(key, value)
+                changed = changed or new_changed
+                result[new_key] = new_value
+        return result        
+     
+
+class AadmTransformer:
+
+    # list if keys to remove from AADM 
+    skip_list = ["isNodeTemplate"]
+
+    #set types
+    @staticmethod
+    def transform_type(data, context):
+        prefix = "type" if context.section == "node_templates" else "derived_from"
+        if isinstance(data, str):
+            return prefix, AadmPreprocessor.get_type(data)            
+        raise Exception 
+
+    @staticmethod   
+    def transform_function_parametres(data, context):
+        if isinstance(data, dict):
+            result = []
+            if "entity" in data:
+                result.append(data["entity"])
+            if "req_cap" in data:
+                result.append(data["req_cap"])                
+            if "property" in data:
+                result.append(data["property"])
+            if "attribute" in data:
+                result.append(data["attribute"])                
+            return result
+        return data
+         
+    @classmethod
+    def transform(cls, data, context):  
+        transform_map = {
+            "type": cls.transform_type, 
+            "get_property": cls.transform_function_parametres, 
+            "get_attribute": cls.transform_function_parametres, 
+            }
+
+        if isinstance(data, dict):
+            result = {}
+            for key, value in data.items():
+                if key in cls.skip_list:
+                    transformation = None
+                elif key in transform_map:
+                    transformation = transform_map[key](value, context)
+                elif isinstance (value, dict):
+                    transformation = cls.transform(value, context)
                 else:
-                    continue
-            elif "occurrences" in key:
-                constraint_value = ""
-                first_el = True
-                for element in value:
-                    if first_el:
-                        constraint_value += str(element)
-                        first_el = False
-                    else:
-                        constraint_value += (", " + str(element))
-                value = '[ {} ]'.format(constraint_value)
-            if isinstance(value[0], dict):
-                v = {}
-                for i in value:
-                    v.update(i)
-                value = v
-        if isinstance(value, dict):
-            if 'topology_template_inputs' in key:
-                l = inputs
-                tabs = 1
-            elif 'isNodeTemplate' in value:  # node template or node type
-                if not value['isNodeTemplate']:
-                    l = node_types
-                    tabs = 1
-                    for i in range(7):
-                        if types[i] in value['type']:
-                            l = l_of_l[i]
-                    if 'ontologies/tosca/tosca' in key:
-                        l = []
-                else:
-                    l = topology_template
-                    tabs = 2
-                l.append('\n')
-                del value['isNodeTemplate']
-            if "https://" in str(key):
-                key = str(key)[str(key).rfind('/') + 1:]
-            if "Standard" in key:
-                l.append('  ' * tabs + "Standard: " + "\n")
-                if 'specification' in value:
-                    l.append('  ' * (tabs + 1) + "type: tosca.interfaces.node.lifecycle.Standard " + "\n")
-                    operations = ['create', 'configure', 'start', 'stop', 'delete']
-                    if 'operations' in value['specification'].keys():
-                        l.append('  ' * (tabs + 1) + "operations: " + "\n")
-                        for operation in operations:
-                            # implementations don't need to implement all steps anymore
-                            if operation in value['specification']['operations'].keys():
-                                l.append('  ' * (tabs + 2) + operation + ": \n")
-                                innerdicts(value['specification']['operations'][operation], tabs + 3, l, isList)
-            # convert constraints maps to lists
-            elif "constraints" in key:
-                l.append('  ' * tabs + "constraints: \n")
-                for constraint in value.keys():
-                    l.append('  ' * (tabs + 1) + '- {}: {}'.format(constraint, value[constraint]) + "\n")
-            # concat implementation urls
-            elif "implementation" in key:
-                l.append("{}implementation: \n".format('  ' * tabs))
-                if "primary" in value:
-                    rootpath = "playbooks"  # default folder for playbooks
-                    if "relative_path" in value["primary"]:
-                        rootpath = value["primary"]["relative_path"]
-                    ansible_urls.append(value['primary']['url'])
-                    temp_path = os.path.join(rootpath, *value['primary']['url'].split('/')[4:]) + "_" + \
-                                value['primary']['path'].split('/')[-1]
-                    ansible_paths.append(temp_path)
-                    l.append("{}primary: {} \n".format('  ' * (tabs + 1), temp_path))
-                if "dependencies" in value:
-                    rootpath = "artifacts"  # default folder for artifacts
-                    if "relative_path" in value["dependencies"]:
-                        rootpath = value["dependencies"]["relative_path"]
-                    if "files" in value["dependencies"]:
-                        dependency = value["dependencies"]["files"]
-                        l.append("{}dependencies: \n".format('  ' * (tabs + 1)))
-                        if isinstance(dependency, list):
-                            for dep in dependency:
-                                extract_dependency(dep, l, tabs, rootpath)
-                        else:
-                            extract_dependency(dependency, l, tabs, rootpath)
-            # convert variable accessors to shorthand variants to improve clarity
-            elif "default" in value and isinstance(value["default"], dict) and (
-                    "get_property" in value["default"].keys() or "get_attribute" in value["default"].keys()):
-                get_prop_or_att = next(iter(value["default"]))
-                prop_or_att = get_prop_or_att.split("_")[-1]
-                default_properties = value["default"][get_prop_or_att]
-                if "req_cap" in default_properties.keys():
-                    l.append(
-                        "{}{:20} {{ default: {{ {}: [ {}, {}, {} ] }} }} \n".format('  ' * tabs,
-                                                                                    key + ":",
-                                                                                    get_prop_or_att,
-                                                                                    default_properties['entity'],
-                                                                                    default_properties['req_cap'],
-                                                                                    default_properties[prop_or_att]))
-                else:
-                    l.append(
-                        "{}{:20} {{ default: {{ {}: [ {}, {} ] }} }} \n".format('  ' * tabs,
-                                                                                key + ":",
-                                                                                get_prop_or_att,
-                                                                                default_properties['entity'],
-                                                                                default_properties[prop_or_att]))
-            elif "specification" in value and isinstance(value["specification"], dict) and (
-                 "get_property" in value["specification"].keys() or "get_attribute" in value["specification"].keys()):
-                get_prop_or_att = next(iter(value["specification"]))
-                prop_or_att = get_prop_or_att.split("_")[-1]
-                default_properties = value["specification"][get_prop_or_att]
-                if "req_cap" in default_properties.keys():
-                    l.append(
-                        "{}{:20} {{ {}: [ {}, {}, {} ] }} \n".format('  ' * tabs,
-                                                                     key + ":",
-                                                                     get_prop_or_att,
-                                                                     default_properties['entity'],
-                                                                     default_properties['req_cap'],
-                                                                     default_properties[
-                                                                         prop_or_att]))
-                else:
-                    l.append(
-                        "{}{:20} {{ {}: [ {}, {} ] }} \n".format('  ' * tabs,
-                                                                 key + ":",
-                                                                 get_prop_or_att,
-                                                                 default_properties['entity'],
-                                                                 default_properties[prop_or_att]))
-            elif "command" in key and "value" in value.keys():
-                l.append('  ' * (tabs) + "command: \n")
-                if isinstance(value["value"], list):
-                    for command_value in value["value"]:
-                        l.append('  ' * (tabs + 1) + '- "{}"'.format(command_value) + "\n")
-                else:
-                    l.append('  ' * (tabs + 1) + '- "{}"'.format(value["value"]) + "\n")
-            elif key != 'specification' and key != 'topology_template_inputs':
-                l.append('  ' * (tabs) + str(key) + ':  \n')
-                if inList:
-                    innerdicts(value, tabs + 2, l, isList)
-                else:
-                    innerdicts(value, tabs + 1, l, isList)
+                    transformation = (key, value)
+                    
+                if isinstance(transformation, tuple):
+                    result[transformation[0]] = transformation[1]
+                elif transformation is not None:
+                    result[key] = transformation                                           
+            return result    
+
+    @classmethod
+    def transform_aadm(cls, aadm): 
+         
+        result = {
+             "tosca_definitions_version": "tosca_simple_yaml_1_3",
+             "node_types": {},
+             "node_templates": {}
+             }
+         
+        for key, value in aadm.items():
+            if "isNodeTemplate" not in value:
+                continue
+
+            if value["isNodeTemplate"]:
+                section = "node_templates"
             else:
-                innerdicts(value, tabs, l, isList)
-        else:
-            # legacy implementation parser
-            if "Ansibles" in str(value):
-                ansible_urls.append(str(value))
-                value = os.path.join(*value.split('/')[4:]) + "_" + data['path'].split('/')[-1]
-                ansible_paths.append(value)
-                l.append('  ' * tabs + 'file: ' + str(value) + ' \n')
-                l.append('  ' * tabs + 'type: tosca.artifacts.Implementation \n')
-            else:
-                if key == 'type' and not (l == topology_template or l == inputs):
-                    key = 'derived_from'
-                if "https://" in str(value):
-                    value = str(value)[str(value).rfind('/') + 1:]
-                elif ": " in str(value) and "description" == str(key):
-                    value = str(value).replace(':', ' ')
-                l.append('  ' * tabs + str(key) + ': ' + str(value) + ' \n')
+                section = "node_types"    
+            context = Context(section)
+            result[section][cls.transform_type(key, context)[1]] = cls.transform(value, context)    
+        return result        
 
+class ToscaDumper(yaml.SafeDumper):
+    def __init__(self, stream,
+            default_style=None, default_flow_style=False,
+            canonical=None, indent=None, width=None,
+            allow_unicode=None, line_break=None,
+            encoding=None, explicit_start=None, explicit_end=None,
+            version=None, tags=None, sort_keys=False):
+        super().__init__(stream, default_flow_style=False, sort_keys=False)
+    def write_line_break(self, data=None):
+        super().write_line_break(data)
 
-def extract_dependency(dep, l, tabs, origin=""):
-    joined_path = os.path.join(origin, dep['path'].split('/')[-1])
-    if "url" in dep:
-        dependency_urls.append(dep['url'])
-        dependency_paths.append(joined_path)
-    l.append("{}- file: {} \n".format('  ' * (tabs + 2), joined_path))
-    l.append("{}type: {} \n".format('  ' * (tabs + 3), "tosca.artifacts.File"))
-
-
-def remove_extra_hierarchies(s):
-    s = re.sub("(\s*)(.*?:)(\s+)(.*?):(\s+)(label:)(\s+)(.*?)(\s+)", r'\1\2 \4\9', s, flags=re.M)
-    s = re.sub("(\s*)(.*?:)(\s+)(value:)(.*?)(\s+)(label:)(\s+)(.*?)(\s+)", r'\1\2 \5\10', s, flags=re.M)
-    return s
-
-
-def parse(data):
-    reset_template_data()
-    innerdicts(data, 1)
-    return ansible_urls, ansible_paths, dependency_urls, dependency_paths
+        if len(self.indents) <= 2:
+            super().write_line_break()
 
 
 def parse_data(name, data):
-    # create an output file
-    outfile = open(name + ".yml", "w")
-    # output file header generator
-    outfile.write('tosca_definitions_version: tosca_simple_yaml_1_3  \n\n')
-    parse(data)
-    s = []
-    # print(data_types)
-    for l in l_of_l:
-        if len(l) > 1:
-            s.append(''.join(l) + '\n\n')
-    # s.append(''.join(data_types) + '\n\n' + ''.join(node_types) + '\n\n' + ''.join(topology_template) + '\n\n')
+    preprocessed_aadm = AadmPreprocessor.preprocess_aadm(data)
+    tosca = AadmTransformer.transform_aadm(preprocessed_aadm)
 
-    outfile.write(remove_extra_hierarchies(''.join(s)))
+    # create an output file
+    with open(name + ".yml", 'w+') as outfile:
+        return yaml.dump(tosca, outfile, Dumper=ToscaDumper)        
+
     print('TOSCA generated -------')
-    return ansible_urls, ansible_paths, dependency_urls, dependency_paths
+    return None #ansible_urls, ansible_paths, dependency_urls, dependency_paths    
+
+#UNRELATED AUX FUNC
+def read(path):
+    return (pathlib.Path(path)).read_text()
+
+def main():
+    json_aadm = json.loads(read("test/fixture.json"))
+    parse_data("test/fixture", json_aadm)  
+
+if __name__ == "__main__":
+    main()  
