@@ -66,7 +66,7 @@ class AadmPreprocessor:
             return True, key, data
         return False, key, data
 
-    #occurrences(under requirements) should be converted to integer
+    #occurrences(under requirements) should be formatted
     @staticmethod
     def format_occurrences(key,data):
         if (isinstance(data, dict)
@@ -75,6 +75,26 @@ class AadmPreprocessor:
             data["occurrences"] = "[" + data["occurrences"][0] +" , "+ data["occurrences"][1] + "]"
             return True, key, data
         return False, key, data  
+
+    #removing url from implementation
+    @staticmethod
+    def remove_uri(key,data):
+        if (isinstance(data, dict)
+                and "url" in data):            
+            del data["url"]
+            return True, key, data
+        return False, key, data 
+    
+    #formatting path in implementation
+    @staticmethod
+    def format_implementation(key,data):
+        if (isinstance(data, dict)
+                and "path" in data):
+            path = AadmPreprocessor.get_path(data["path"])
+            del data["path"]
+            return True, key, path
+        return False, key, data 
+
 
     #remove replace empty dictionaries with key values
     @staticmethod
@@ -94,12 +114,19 @@ class AadmPreprocessor:
             return True, short_type, data
         return False, key, data
 
-    #extact type out of URL
+    #extract type out of URL
     @classmethod
     def get_type(cls, type_str):
         if re.search(cls.url_regex, type_str) is None:
             return type_str
         return type_str.split("/")[-1]
+
+    #extract path out of url
+    @classmethod
+    def get_path(cls, path_str):
+        if re.search(cls.url_regex, path_str) is None:
+            return path_str
+        return ('{}/{}'.format(*path_str.split('/')[-2:]))
 
     #recursively traverse the tree sequentially applying preprocessing rules
     @classmethod
@@ -112,7 +139,9 @@ class AadmPreprocessor:
             cls.collapse_specifications,
             cls.collapse_empty_dict,
             cls.reduce_type,
-            cls.format_occurrences]
+            cls.format_occurrences,
+            cls.format_implementation,
+            cls.remove_uri]
 
         changed = False
         result = data
