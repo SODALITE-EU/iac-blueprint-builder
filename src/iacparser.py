@@ -141,7 +141,7 @@ class AadmPreprocessor:
 
 class AadmTransformer:
 
-    # list if keys to remove from AADM
+    # list of keys to remove from AADM
     skip_list = ["isNodeTemplate"]
 
     #set types
@@ -198,6 +198,7 @@ class AadmTransformer:
 
         result = {
              "tosca_definitions_version": "tosca_simple_yaml_1_3",
+             "data_types": {},
              "node_types": {},
              "node_templates": {}
              }
@@ -209,7 +210,10 @@ class AadmTransformer:
             if value["isNodeTemplate"]:
                 section = "node_templates"
             else:
-                section = "node_types"
+                if "sodalite.datatypes" in key:
+                    section = "data_types"
+                else:
+                    section = "node_types"
             context = Context(section, 0)
             key = cls.transform_type(key, context)[1]
             result[section][key] = cls.transform(value, context)
