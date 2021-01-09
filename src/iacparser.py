@@ -18,7 +18,7 @@ class AadmPreprocessor:
     # regex to check if string is URL
     url_regex = r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"
     # list of keys to convert
-    convert_list_dict = ["properties", "attributes", "interfaces", "capabilities"]  
+    convert_list_dict = ["properties", "attributes", "interfaces", "capabilities", "requirements"]  
 
     # data in AADM JSON nodes is presented as lists
     # some lists must be converted to maps (dictionaries)
@@ -49,7 +49,7 @@ class AadmPreprocessor:
     def collapse_values(key, data):
         if (isinstance(data, dict)
                 and "value" in data
-                and len(data) == 1):
+                and len(data) == 1): 
             return True, key, data["value"]
         return False, key, data
 
@@ -66,6 +66,16 @@ class AadmPreprocessor:
             return True, key, data
         return False, key, data
 
+    #occurrences(under requirements) should be converted to integer
+    @staticmethod
+    def format_occurrences(key,data):
+        if (isinstance(data, dict)
+                and "occurrences" in data
+                and isinstance(data["occurrences"], list)):           
+            data["occurrences"] = "[" + data["occurrences"][0] +" , "+ data["occurrences"][1] + "]"
+            return True, key, data
+        return False, key, data  
+
     #remove replace empty dictionaries with key values
     @staticmethod
     def collapse_empty_dict(key, data):
@@ -74,7 +84,7 @@ class AadmPreprocessor:
             check = next(iter(data))
             if isinstance(data[check], dict) and len(data[check]) == 0:
                 return True, key, check
-        return False, key, data
+        return False, key, data  
 
     # extract type values from URLs
     @classmethod
@@ -101,7 +111,8 @@ class AadmPreprocessor:
             cls.collapse_values,
             cls.collapse_specifications,
             cls.collapse_empty_dict,
-            cls.reduce_type]
+            cls.reduce_type,
+            cls.format_occurrences]
 
         changed = False
         result = data
@@ -246,9 +257,9 @@ def parse_data(name, data):
 
     # create an output file
     with open(name + ".yml", 'w+') as outfile:
+        print('TOSCA generated -------')
         return yaml.dump(tosca, outfile, Dumper=ToscaDumper)        
 
-    print('TOSCA generated -------')
     return None #ansible_urls, ansible_paths, dependency_urls, dependency_paths    
 
 #UNRELATED AUX FUNC
