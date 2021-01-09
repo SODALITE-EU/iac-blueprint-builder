@@ -6,7 +6,7 @@ import requests
 from flask import Flask, request
 from flask_swagger_ui import get_swaggerui_blueprint
 
-import src.iacparser
+import src
 
 SWAGGER_URL = '/docs'
 API_URL = '/static/swagger.json'
@@ -47,7 +47,7 @@ def parse():
     if not os.path.exists(workpath):
         os.makedirs(workpath)
     outpath = os.path.join(workpath, body["name"])
-    ansible_tuple = iacparser.parse_data(outpath, body["data"])
+    ansible_tuple = src.iacparser.parse_data(outpath, body["data"])
     print('Downloading Ansible files ---------')
     download_dependencies(ansible_tuple[0], ansible_tuple[1], workpath)
     print('Ansible files done ------- ')
