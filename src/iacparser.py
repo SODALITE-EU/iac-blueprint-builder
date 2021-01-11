@@ -65,21 +65,22 @@ class AadmPreprocessor:
             data.update(spec)
             return True, key, data
         return False, key, data
-    
-    # to collapse default: properties
+
+    #print default in json format
     @staticmethod
     def collapse_default(key, data):
         if (isinstance(data, dict)
-                and "default" in data):
-            deft = data["default"]
-            del data["default"]
-            data.update(deft)
-            return True, key, data
+                and "default" in data
+                and isinstance(data["default"], dict)):
+            get_prop_attr = next(iter(data["default"]))
+            parameter = AadmPreprocessor.transform_function_parametres(data["default"][get_prop_attr])
+            deft = '{{ default: {{ {}: {} }} }}'.format(get_prop_attr,parameter)
+            return True, key, deft
         return False, key, data
 
     #occurrences(under requirements) should be formatted
     @staticmethod
-    def format_occurrences(key,data):
+    def format_occurrences(key,data):    
         if (isinstance(data, dict)
                 and "occurrences" in data
                 and isinstance(data["occurrences"], list)):           
@@ -132,6 +133,20 @@ class AadmPreprocessor:
             return path_str
         return path_str.split('/')[-2:]
 
+    #collapse parameters for get_parameter & get_attrribute
+    @classmethod
+    def transform_function_parametres(cls, data):          
+        result = []
+        if "entity" in data:
+            result.append(data["entity"])
+        if "req_cap" in data:
+            result.append(data["req_cap"])
+        if "property" in data:
+            result.append(data["property"])
+        if "attribute" in data:
+            result.append(data["attribute"])            
+        return result
+
     #recursively traverse the tree sequentially applying preprocessing rules
     @classmethod
     def preprocess_data(cls, key, data):
@@ -144,7 +159,8 @@ class AadmPreprocessor:
             cls.collapse_empty_dict,
             cls.reduce_type,
             cls.format_occurrences,
-            cls.format_implementation]
+            cls.format_implementation,
+            cls.collapse_default]
 
         changed = False
         result = data
@@ -195,31 +211,10 @@ class AadmTransformer:
             return prefix, AadmPreprocessor.get_type(data)
         raise Exception
 
-    @staticmethod
-    def transform_function_parametres(data, context):
-        if isinstance(data, dict):
-            result = []
-            if "entity" in data:
-                result.append(data["entity"])
-            if "req_cap" in data:
-                result.append(data["req_cap"])
-            if "property" in data:
-                result.append(data["property"])
-            if "attribute" in data:
-                result.append(data["attribute"])
-            return result
-        return data
-    
     @classmethod
     def transform(cls, data, context):
-        transform_map = {
-            "type": cls.transform_type,
-            }
-        transform_map2 = {
-            "get_property": cls.transform_function_parametres,
-            "get_attribute": cls.transform_function_parametres,
-        }
-
+        transform_map = {"type": cls.transform_type}
+        
         if isinstance(data, dict):
             result = {}
             for key, value in data.items():
@@ -227,9 +222,6 @@ class AadmTransformer:
                     transformation = None
                 elif key in transform_map:
                     transformation = transform_map[key](value, context)
-                elif key in transform_map2:
-                    transformation = transform_map2[key](value, context)
-                    #transformation = '{{ default: {{ {}: {} }} }}'.format(key, transformation)
                 elif isinstance(value, dict):
                     transformation = cls.transform(value, context.add_level())
                 else:
