@@ -65,6 +65,17 @@ class AadmPreprocessor:
             data.update(spec)
             return True, key, data
         return False, key, data
+    
+    # to collapse default: properties
+    @staticmethod
+    def collapse_default(key, data):
+        if (isinstance(data, dict)
+                and "default" in data):
+            deft = data["default"]
+            del data["default"]
+            data.update(deft)
+            return True, key, data
+        return False, key, data
 
     #occurrences(under requirements) should be formatted
     @staticmethod
@@ -72,29 +83,22 @@ class AadmPreprocessor:
         if (isinstance(data, dict)
                 and "occurrences" in data
                 and isinstance(data["occurrences"], list)):           
-            data["occurrences"] = "[" + data["occurrences"][0] +" , "+ data["occurrences"][1] + "]"
+            data["occurrences"] = '[ {}, {} ]'.format(data["occurrences"][0],data["occurrences"][1])
             return True, key, data
         return False, key, data  
-
-    #removing url from implementation
-    @staticmethod
-    def remove_uri(key,data):
-        if (isinstance(data, dict)
-                and "url" in data):            
-            del data["url"]
-            return True, key, data
-        return False, key, data 
     
-    #formatting path in implementation
+    #formatting path and url in implementation
     @staticmethod
     def format_implementation(key,data):
         if (isinstance(data, dict)
                 and "path" in data):
             path = AadmPreprocessor.get_path(data["path"])
+            uri = AadmPreprocessor.get_type(data["url"])
+            pth = '{}/{}_{}'.format(path[0],uri,path[1])
             del data["path"]
-            return True, key, path
+            del data["url"]
+            return True, key, pth
         return False, key, data 
-
 
     #remove replace empty dictionaries with key values
     @staticmethod
@@ -126,7 +130,7 @@ class AadmPreprocessor:
     def get_path(cls, path_str):
         if re.search(cls.url_regex, path_str) is None:
             return path_str
-        return ('{}/{}'.format(*path_str.split('/')[-2:]))
+        return path_str.split('/')[-2:]
 
     #recursively traverse the tree sequentially applying preprocessing rules
     @classmethod
@@ -140,8 +144,7 @@ class AadmPreprocessor:
             cls.collapse_empty_dict,
             cls.reduce_type,
             cls.format_occurrences,
-            cls.format_implementation,
-            cls.remove_uri]
+            cls.format_implementation]
 
         changed = False
         result = data
@@ -206,14 +209,16 @@ class AadmTransformer:
                 result.append(data["attribute"])
             return result
         return data
-
+    
     @classmethod
     def transform(cls, data, context):
         transform_map = {
             "type": cls.transform_type,
+            }
+        transform_map2 = {
             "get_property": cls.transform_function_parametres,
             "get_attribute": cls.transform_function_parametres,
-            }
+        }
 
         if isinstance(data, dict):
             result = {}
@@ -222,6 +227,9 @@ class AadmTransformer:
                     transformation = None
                 elif key in transform_map:
                     transformation = transform_map[key](value, context)
+                elif key in transform_map2:
+                    transformation = transform_map2[key](value, context)
+                    #transformation = '{{ default: {{ {}: {} }} }}'.format(key, transformation)
                 elif isinstance(value, dict):
                     transformation = cls.transform(value, context.add_level())
                 else:
@@ -230,12 +238,13 @@ class AadmTransformer:
                 if isinstance(transformation, tuple):
                     result[transformation[0]] = transformation[1]
                 elif transformation is not None:
-                    result[key] = transformation
+                    result[key] = transformation   
+
             return result
+        return data
 
     @classmethod
     def transform_aadm(cls, aadm):
-
         result = {
              "tosca_definitions_version": "tosca_simple_yaml_1_3",
              "data_types": {},
@@ -256,7 +265,8 @@ class AadmTransformer:
                     section = "node_types"
             context = Context(section, 0)
             key = cls.transform_type(key, context)[1]
-            result[section][key] = cls.transform(value, context)
+            result[section][key] = cls.transform(value, context) 
+            
 
         result["topology_template"] = {}
         result["topology_template"]["node_templates"] = result["node_templates"]
