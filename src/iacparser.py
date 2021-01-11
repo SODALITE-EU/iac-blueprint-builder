@@ -71,11 +71,24 @@ class AadmPreprocessor:
     def collapse_default(key, data):
         if (isinstance(data, dict)
                 and "default" in data
-                and isinstance(data["default"], dict)):
+                and isinstance(data["default"], dict)
+                and ("get_property" in data["default"].keys() 
+                or "get_attribute" in data["default"].keys())):
+
             get_prop_attr = next(iter(data["default"]))
-            parameter = AadmPreprocessor.transform_function_parametres(data["default"][get_prop_attr])
-            deft = '{{ default: {{ {}: {} }} }}'.format(get_prop_attr,parameter)
-            return True, key, deft
+            prop_or_att = get_prop_attr.split("_")[-1]
+            ent_prop_attr_req = data["default"][get_prop_attr]
+            deflt = '{{default: {{{}: [{}, {}] }} }}'
+            if "req_cap" in ent_prop_attr_req.keys():
+                data = deflt.format(get_prop_attr, 
+                                    ent_prop_attr_req["entity"], 
+                                    ent_prop_attr_req[prop_or_att],
+                                    ent_prop_attr_req["req_cap"])
+            else:
+                data = deflt.format(get_prop_attr, 
+                                    ent_prop_attr_req["entity"], 
+                                    ent_prop_attr_req[prop_or_att])
+            return True, key, data
         return False, key, data
 
     #occurrences(under requirements) should be formatted
@@ -84,7 +97,7 @@ class AadmPreprocessor:
         if (isinstance(data, dict)
                 and "occurrences" in data
                 and isinstance(data["occurrences"], list)):           
-            data["occurrences"] = '[ {}, {} ]'.format(data["occurrences"][0],data["occurrences"][1])
+            data = '[ {}, {} ]'.format(data["occurrences"][0],data["occurrences"][1])
             return True, key, data
         return False, key, data  
     
@@ -132,20 +145,6 @@ class AadmPreprocessor:
         if re.search(cls.url_regex, path_str) is None:
             return path_str
         return path_str.split('/')[-2:]
-
-    #collapse parameters for get_parameter & get_attrribute
-    @classmethod
-    def transform_function_parametres(cls, data):          
-        result = []
-        if "entity" in data:
-            result.append(data["entity"])
-        if "req_cap" in data:
-            result.append(data["req_cap"])
-        if "property" in data:
-            result.append(data["property"])
-        if "attribute" in data:
-            result.append(data["attribute"])            
-        return result
 
     #recursively traverse the tree sequentially applying preprocessing rules
     @classmethod
