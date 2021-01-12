@@ -67,22 +67,6 @@ class AadmPreprocessor:
             data.update(spec)
             return True, key, data
         return False, key, data
-
-    #occurrences(under requirements) should be converted to integer
-    @staticmethod
-    def format_occurrences(key,data):    
-        if (isinstance(data, dict)
-                and "occurrences" in data
-                and isinstance(data["occurrences"], list)):
-            i = data["occurrences"][0]
-            print(data["occurrences"][1])
-            #data["occurrences"] = [classthing(s) for s in list]
-            lisst = '{}, {}'.format(int(i), data["occurrences"][1])
-            print(data["occurrences"][1])
-            data["occurrences"] = list(lisst.strip(","))
-            #print(data["occurrences"][1])
-            return True, key, data
-        return False, key, data  
     
     #convert "files" from list to dict 
     #to configure path and url
@@ -141,6 +125,16 @@ class AadmPreprocessor:
             return path_str
         return path_str.split('/')[-2:]
 
+    #convert occurrences type from str to int in yaml.scalarnode
+    @classmethod
+    def convert_int(cls, tag):
+        split_tag = tag.split(":") 
+        get_type = split_tag[-1]
+        if get_type=="str":
+            base_tag = ":".join(split_tag[:2])
+            ntag = base_tag + ":int"
+        return ntag
+
     #recursively traverse the tree sequentially applying preprocessing rules
     @classmethod
     def preprocess_data(cls, key, data):
@@ -154,7 +148,6 @@ class AadmPreprocessor:
             cls.reduce_type,
             cls.file_list_dict,
             cls.format_path_url,
-            #cls.format_occurrences
             ]
 
         changed = False
@@ -307,6 +300,10 @@ class ToscaDumper(yaml.SafeDumper):
         #and not hyphen-space format
         if isinstance(node, SequenceNode):            
             node.flow_style = True
+
+            for ele in node.value:
+                if(ele.value.isdigit()):
+                    ele.tag = AadmPreprocessor.convert_int(ele.tag)                    
 
         super().serialize_node(node, parent, index)
 
