@@ -4,6 +4,8 @@ import re
 import os 
 import pathlib
 
+from yaml import ScalarNode, CollectionNode
+
 
 class Context:
     def __init__(self, section, level):
@@ -234,6 +236,13 @@ class ToscaDumper(yaml.SafeDumper):
 
         if len(self.indents) <= 2:
             super().write_line_break()
+
+    def serialize_node(self, node, parent, index, flow_style=False):
+        if isinstance(index, ScalarNode) and index.value == "inputs":
+            for key, value in node.value:
+                if isinstance(value, CollectionNode):
+                    value.flow_style = True
+        super().serialize_node(node, parent, index)
 
 
 def parse_data(name, data):
