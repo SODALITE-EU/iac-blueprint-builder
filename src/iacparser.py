@@ -246,7 +246,6 @@ class AadmTransformer:
     def transform_aadm(cls, aadm):
         result = {
              "tosca_definitions_version": "tosca_simple_yaml_1_3",
-             "data_types": {},
              "node_types": {},
              "node_templates": {}
              }
@@ -255,13 +254,21 @@ class AadmTransformer:
             if "isNodeTemplate" not in value:
                 continue
 
-            if value["isNodeTemplate"]:
+            if value["isNodeTemplate"]:               
                 section = "node_templates"
             else:
                 if "sodalite.datatypes" in key:
+                    if "data_types" not in result:
+                        result["data_types"] = {}  
                     section = "data_types"
+                    
+                elif "sodalite.relationships" in key:
+                    if "relationship_types" not in result:
+                        result["relationship_types"] = {} 
+                    section = "relationship_types"
                 else:
                     section = "node_types"
+            
             context = Context(section, 0)
             key = cls.transform_type(key, context)[1]
             result[section][key] = cls.transform(value, context) 
