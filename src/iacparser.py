@@ -4,6 +4,8 @@ import re
 import os 
 import pathlib
 
+from yaml import ScalarNode, CollectionNode, SequenceNode
+
 
 class Context:
     def __init__(self, section, level):
@@ -66,44 +68,37 @@ class AadmPreprocessor:
             return True, key, data
         return False, key, data
 
-    #print default in json format
-    @staticmethod
-    def collapse_default(key, data):
-        if (isinstance(data, dict)
-                and "default" in data
-                and isinstance(data["default"], dict)
-                and ("get_property" in data["default"].keys() 
-                or "get_attribute" in data["default"].keys())):
-
-            get_prop_attr = next(iter(data["default"]))
-            prop_or_att = get_prop_attr.split("_")[-1]
-            ent_prop_attr_req = data["default"][get_prop_attr]
-            deflt = '{{default: {{{}: [{}, {}] }} }}'
-            if "req_cap" in ent_prop_attr_req.keys():
-                data = deflt.format(get_prop_attr, 
-                                    ent_prop_attr_req["entity"], 
-                                    ent_prop_attr_req[prop_or_att],
-                                    ent_prop_attr_req["req_cap"])
-            else:
-                data = deflt.format(get_prop_attr, 
-                                    ent_prop_attr_req["entity"], 
-                                    ent_prop_attr_req[prop_or_att])
-            return True, key, data
-        return False, key, data
-
-    #occurrences(under requirements) should be formatted
+    #occurrences(under requirements) should be converted to integer
     @staticmethod
     def format_occurrences(key,data):    
         if (isinstance(data, dict)
                 and "occurrences" in data
-                and isinstance(data["occurrences"], list)):           
-            data = '[ {}, {} ]'.format(data["occurrences"][0],data["occurrences"][1])
+                and isinstance(data["occurrences"], list)):
+            i = data["occurrences"][0]
+            print(data["occurrences"][1])
+            #data["occurrences"] = [classthing(s) for s in list]
+            lisst = '{}, {}'.format(int(i), data["occurrences"][1])
+            print(data["occurrences"][1])
+            data["occurrences"] = list(lisst.strip(","))
+            #print(data["occurrences"][1])
             return True, key, data
         return False, key, data  
     
-    #formatting path and url in implementation
+    #convert "files" from list to dict 
+    #to configure path and url
     @staticmethod
-    def format_implementation(key,data):
+    def file_list_dict(key, data):
+        if (isinstance(data, dict)
+                and "files" in data
+                and isinstance(data["files"], list)):
+            list_dict = data["files"][0]
+            data["files"] = list_dict
+            return True, key, data
+        return False, key, data
+
+    #formatting path and url to download playbooks
+    @staticmethod
+    def format_path_url(key,data):
         if (isinstance(data, dict)
                 and "path" in data):
             path = AadmPreprocessor.get_path(data["path"])
@@ -157,9 +152,10 @@ class AadmPreprocessor:
             cls.collapse_specifications,
             cls.collapse_empty_dict,
             cls.reduce_type,
-            cls.format_occurrences,
-            cls.format_implementation,
-            cls.collapse_default]
+            cls.file_list_dict,
+            cls.format_path_url,
+            #cls.format_occurrences
+            ]
 
         changed = False
         result = data
@@ -210,10 +206,29 @@ class AadmTransformer:
             return prefix, AadmPreprocessor.get_type(data)
         raise Exception
 
+    @staticmethod
+    def transform_function_parametres(data, context):
+        if isinstance(data, dict):
+            result = []
+            if "entity" in data:
+                result.append(data["entity"])
+            if "req_cap" in data:
+                result.append(data["req_cap"])
+            if "property" in data:
+                result.append(data["property"])
+            if "attribute" in data:
+                result.append(data["attribute"])
+            return result
+        return data
+
     @classmethod
     def transform(cls, data, context):
-        transform_map = {"type": cls.transform_type}
-        
+        transform_map = {
+            "type": cls.transform_type,
+            "get_property": cls.transform_function_parametres,
+            "get_attribute": cls.transform_function_parametres,
+            }
+
         if isinstance(data, dict):
             result = {}
             for key, value in data.items():
@@ -279,6 +294,21 @@ class ToscaDumper(yaml.SafeDumper):
 
         if len(self.indents) <= 2:
             super().write_line_break()
+
+    def serialize_node(self, node, parent, index, flow_style=False):
+
+        #ouput inputs in json-like format
+        if isinstance(index, ScalarNode) and index.value == "inputs":            
+            for key, value in node.value:
+                if isinstance(value, CollectionNode):
+                    value.flow_style = True
+
+        #to output all yaml arrays in inline format 
+        #and not hyphen-space format
+        if isinstance(node, SequenceNode):            
+            node.flow_style = True
+
+        super().serialize_node(node, parent, index)
 
 
 def parse_data(name, data):
