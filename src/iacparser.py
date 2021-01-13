@@ -20,7 +20,7 @@ class AadmPreprocessor:
     # regex to check if string is URL
     url_regex = r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"
     # list of keys to convert
-    convert_list_dict = ["properties", "attributes", "interfaces", "capabilities", "requirements"]  
+    convert_list_dict = ["properties", "attributes", "interfaces", "capabilities"]
 
     # data in AADM JSON nodes is presented as lists
     # some lists must be converted to maps (dictionaries)
@@ -254,25 +254,24 @@ class AadmTransformer:
             if "isNodeTemplate" not in value:
                 continue
 
-            if value["isNodeTemplate"]:               
+            if value["isNodeTemplate"]:
                 section = "node_templates"
             else:
                 if "sodalite.datatypes" in key:
                     if "data_types" not in result:
-                        result["data_types"] = {}  
+                        result["data_types"] = {}
                     section = "data_types"
-                    
+
                 elif "sodalite.relationships" in key:
                     if "relationship_types" not in result:
-                        result["relationship_types"] = {} 
+                        result["relationship_types"] = {}
                     section = "relationship_types"
                 else:
                     section = "node_types"
-            
+
             context = Context(section, 0)
             key = cls.transform_type(key, context)[1]
-            result[section][key] = cls.transform(value, context) 
-            
+            result[section][key] = cls.transform(value, context)
 
         result["topology_template"] = {}
         result["topology_template"]["node_templates"] = result["node_templates"]
@@ -297,20 +296,19 @@ class ToscaDumper(yaml.SafeDumper):
 
     def serialize_node(self, node, parent, index, flow_style=False):
 
-        #ouput inputs in json-like format
-        if isinstance(index, ScalarNode) and index.value == "inputs":            
+        # output inputs in json-like format
+        if isinstance(index, ScalarNode) and index.value == "inputs":
             for key, value in node.value:
                 if isinstance(value, CollectionNode):
                     value.flow_style = True
 
-        #to output all yaml arrays in inline format 
-        #and not hyphen-space format
-        if isinstance(node, SequenceNode):            
+        if (isinstance(node, SequenceNode)
+                and isinstance(index, ScalarNode)
+                and index.value == "occurrences"):
             node.flow_style = True
-
             for ele in node.value:
-                if(ele.value.isdigit()):
-                    ele.tag = AadmPreprocessor.convert_int(ele.tag)                    
+                if isinstance(ele, ScalarNode) and ele.value.isdigit():
+                    ele.tag = AadmPreprocessor.convert_int(ele.tag)
 
         super().serialize_node(node, parent, index)
 
