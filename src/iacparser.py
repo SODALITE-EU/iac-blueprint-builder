@@ -2,6 +2,7 @@ import yaml
 import json
 import re
 import os 
+import requests
 import pathlib
 
 from yaml import ScalarNode, CollectionNode, SequenceNode
@@ -21,6 +22,16 @@ class AadmPreprocessor:
     url_regex = r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"
     # list of keys to convert
     convert_list_dict = ["properties", "attributes", "interfaces", "capabilities"]
+
+    #optimization initializations
+    valid_container_image_properties = ["image", "image_name"]
+    
+    CONFIG_PATH = '../config_modak.json'    
+    if os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH) as config_modak:
+            config_modak = json.load(config_modak)
+            MODAK_ENDPOINT_DEFAULT = config_modak[MODAK_ENDPOINT_DEFAULT]
+            MODAK_ENDPOINT = os.getenv("MODAK_ENDPOINT", MODAK_ENDPOINT_DEFAULT)
 
     # data in AADM JSON nodes is presented as lists
     # some lists must be converted to maps (dictionaries)
@@ -67,6 +78,38 @@ class AadmPreprocessor:
             data.update(spec)
             return True, key, data
         return False, key, data
+    
+    #handle modak integration
+    def handle_optimization(key, data):
+        if (isinstance(data, dict)
+                and "optimization" in data
+                and isinstance(data["optimization"], dict)):
+            opt_json_str = data["optimization"]
+            if opt_json_str:
+                for property in data["properties"]:
+                    values = list(property.values())
+                    if values and values[0].get("label", "") in valid_container_image_properties:
+                        opt_image = AadmPreprocessor.get_opt_image(opt_json_str)
+                        if opt_image:
+                            values[0]["value"] = opt_image
+            del data["optimization"]
+            return True, key, data
+        return False, key, data
+
+    def get_opt_image(cls, opt_json_string: str):
+        opt_json_string = opt_json_string.strip('\"')
+        opt = json.loads(opt_json_string)
+        MODAK_IMAGE_API = os.path.join(MODAK_ENDPOINT, "get_image")
+        response = requests.post(
+            MODAK_IMAGE_API,
+            headers= { "Content-Type": "application/json" },
+            json= { "job": { "optimisation": opt.get("optimization", {}) } })
+        if response.status_code != 200:
+            print("Optimisation request error")
+            return ""
+        data = response.json()
+        image = data.get("job", {}).get("container_runtime", "").split("://", 1)
+        return image[1] if len(image) > 1 else image[0]
     
     #convert "files" from list to dict 
     #to configure path and url
