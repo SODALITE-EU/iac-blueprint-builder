@@ -1,13 +1,36 @@
-# import unittest
-# target = __import__("src")
 import json
 import yaml
+import pytest
+from pathlib import Path
 
 import src.iacparser as parser
 
 
+class TestConfig:
 
-def test_parser():
+    YAML_SUFFIX = ".yml"
+    OUTPUTS = Path("test/outputs")
+    FIXTURE = "test/fixture.json"
+
+    def __init__(self, test_name, fixture_json=None):
+        self.test_path = self.OUTPUTS / test_name
+        self.fixture_path = Path(fixture_json) if fixture_json else Path(self.FIXTURE)
+
+    def fixture(self):
+        return json.load(self.fixture_path.open())
+
+    def parser_dest(self):
+        return str(self.test_path)
+
+    def yaml_path(self):
+        return self.test_path.with_suffix(self.YAML_SUFFIX)
+
+    def service(self):
+        return yaml.load(self.yaml_path().open())
+
+
+@pytest.mark.skip(reason="Extraction still needs to be implemented")
+def test_artifacts_extraction():
     # expected ansible_files, expected ansible_paths, expected dependency_files, expected dependency_paths
     expected = (['http://160.40.52.200:8084/Ansibles/97d6afb6-7ed5-4400-af71-f1e6afc9bef5',
                  'http://160.40.52.200:8084/Ansibles/8472698e-044e-470b-9805-7bc5046f3146',
@@ -58,43 +81,40 @@ def test_parser():
                  'artifacts/ca.crt',
                  'artifacts/config.json.tmpl'])
 
-    with open('test/fixture.json') as f:
-        t = json.load(f)
-        parsed_data = parser.parse_data("test/neww", t)
-        pds = []
-        exs = []
-        for i in range(0, 3):
-            pds.append(set(parsed_data[i]))
-            exs.append(set(expected[i]))
-        assert exs == pds
+    test = TestConfig("neww")
+    parsed_data = parser.parse_data(test.parser_dest(), test.fixture())
+
+    pds = []
+    exs = []
+    for i in range(0, 3):
+        pds.append(set(parsed_data[i]))
+        exs.append(set(expected[i]))
+    assert exs == pds
+        
 
 def test_parser_opt():
-    # test output
-    test_output = "/tmp/test_output"
 
     # this component has optimisation field
-    opt_component = "snow-skyline-extractor"
+    opt_component = "optimization-skyline-extractor"
     # expected container for $opt_component
     opt_expected_container_runtime = "modakopt/modak:tensorflow-2.1-gpu-src"
 
     # this component has optimisation field, but optimised container not found
-    not_found_opt_component = "snow-skyline-alignment"
-    # expected container for $not_found_opt_component
-    not_found_opt_expected_container_runtime = "snow-skyline-alignment:latest"
+    opt_not_found_component = "optimization-skyline-alignment"
+    # expected container for $opt_not_found_component
+    opt_not_found_expected_container_runtime = "snow-skyline-alignment:latest"
 
-    with open('test/fixture.json') as f:
-        t = json.load(f)
-        parser.parse_data(test_output, t)
 
-        with open(test_output + ".yml") as output_yaml:
-            service = yaml.load(output_yaml)
+    test = TestConfig("opt", "test/opt_fixture.json")
+    parser.parse_data(test.parser_dest(), test.fixture())
+    service = test.service()
 
-        opt_component_template = service.get("topology_template").get("node_templates").get(opt_component)
-        image_name = opt_component_template.get("properties").get("image_name")
+    opt_component_template = service.get("topology_template").get("node_templates").get(opt_component)
+    image_name = opt_component_template.get("properties").get("image_name")
 
-        image_name == opt_expected_container_runtime
+    assert image_name == opt_expected_container_runtime
 
-        not_found_opt_component_template = service.get("topology_template").get("node_templates").get(not_found_opt_component)
-        image_name = not_found_opt_component_template.get("properties").get("image_name")
+    opt_not_found_component_template = service.get("topology_template").get("node_templates").get(opt_not_found_component)
+    image_name = opt_not_found_component_template.get("properties").get("image_name")
 
-        image_name == not_found_opt_expected_container_runtime
+    assert image_name == opt_not_found_expected_container_runtime
