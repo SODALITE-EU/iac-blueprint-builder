@@ -23,7 +23,7 @@ class AadmPreprocessor:
     # list of keys to convert
     convert_list_dict = ["properties", "attributes", "interfaces", "capabilities"]
 
-    #optimization initializations
+    #optimization parameters
     valid_container_image_properties = ["image", "image_name"]
     
     CONFIG_PATH = '../config_modak.json'    
@@ -79,16 +79,25 @@ class AadmPreprocessor:
             return True, key, data
         return False, key, data
     
+    #convert optimization str to dict
+    @classmethod
+    def convert_opt_str(cls, key, data):
+        if isinstance(data, str) and key == "optimisation":
+            result = json.loads(data.strip('\"'))
+            return True, key, result
+        return False, key, data
+    
     #handle modak integration
-    def handle_optimization(key, data):
+    @classmethod
+    def handle_optimization(cls, key, data):
         if (isinstance(data, dict)
-                and "optimization" in data
-                and isinstance(data["optimization"], dict)):
+                and "optimization" in key):
+            print(data)
             opt_json_str = data["optimization"]
             if opt_json_str:
                 for property in data["properties"]:
                     values = list(property.values())
-                    if values and values[0].get("label", "") in valid_container_image_properties:
+                    if values and values[0].get("label", "") in cls.valid_container_image_properties:
                         opt_image = AadmPreprocessor.get_opt_image(opt_json_str)
                         if opt_image:
                             values[0]["value"] = opt_image
@@ -96,10 +105,11 @@ class AadmPreprocessor:
             return True, key, data
         return False, key, data
 
+    @classmethod
     def get_opt_image(cls, opt_json_string: str):
         opt_json_string = opt_json_string.strip('\"')
         opt = json.loads(opt_json_string)
-        MODAK_IMAGE_API = os.path.join(MODAK_ENDPOINT, "get_image")
+        MODAK_IMAGE_API = os.path.join(cls.MODAK_ENDPOINT, "get_image")
         response = requests.post(
             MODAK_IMAGE_API,
             headers= { "Content-Type": "application/json" },
@@ -191,6 +201,8 @@ class AadmPreprocessor:
             cls.reduce_type,
             cls.file_list_dict,
             cls.format_path_url,
+            cls.convert_opt_str,
+            cls.handle_optimization,
             ]
 
         changed = False
@@ -233,7 +245,7 @@ class AadmTransformer:
 
     # list of keys to remove from AADM
     skip_list = ["isNodeTemplate"]
-
+    
     #set types
     @staticmethod
     def transform_type(data, context):
