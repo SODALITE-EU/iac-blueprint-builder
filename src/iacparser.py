@@ -8,6 +8,28 @@ import pathlib
 from yaml import ScalarNode, CollectionNode, SequenceNode
 
 
+class ModakConfig:
+    
+    config_path = pathlib.Path(__file__).parent / pathlib.Path('../config_modak.json')
+    config = None
+
+    @classmethod
+    def init(cls):
+        if not cls.config:
+            cls.config = json.load(cls.config_path.open())
+
+    @classmethod
+    def get_modak_endpoint(cls):
+        cls.init()
+        return os.getenv("MODAK_ENDPOINT", cls.config.get("MODAK_ENDPOINT", "localhost"))
+
+    @classmethod
+    def get_modak_api_image(cls):
+        cls.init()
+        api_image = os.getenv("MODAK_API_IMAGE", cls.config.get("MODAK_API_IMAGE", "/get_image"))
+        return cls.get_modak_endpoint() + api_image
+
+
 class Context:
     def __init__(self, section, level):
         self.section = section
@@ -22,16 +44,6 @@ class AadmPreprocessor:
     url_regex = r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"
     # list of keys to convert
     convert_list_dict = ["properties", "attributes", "interfaces", "capabilities"]
-
-    #optimization parameters
-    valid_container_image_properties = ["image", "image_name"]
-    
-    CONFIG_PATH = '../config_modak.json'    
-    if os.path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH) as config_modak:
-            config_modak = json.load(config_modak)
-            MODAK_ENDPOINT_DEFAULT = config_modak[MODAK_ENDPOINT_DEFAULT]
-            MODAK_ENDPOINT = os.getenv("MODAK_ENDPOINT", MODAK_ENDPOINT_DEFAULT)
 
     # data in AADM JSON nodes is presented as lists
     # some lists must be converted to maps (dictionaries)
@@ -78,48 +90,6 @@ class AadmPreprocessor:
             data.update(spec)
             return True, key, data
         return False, key, data
-    
-    #convert optimization str to dict
-    @classmethod
-    def convert_opt_str(cls, key, data):
-        if isinstance(data, str) and key == "optimisation":
-            result = json.loads(data.strip('\"'))
-            return True, key, result
-        return False, key, data
-    
-    #handle modak integration
-    @classmethod
-    def handle_optimization(cls, key, data):
-        if (isinstance(data, dict)
-                and "optimization" in key):
-            print(data)
-            opt_json_str = data["optimization"]
-            if opt_json_str:
-                for property in data["properties"]:
-                    values = list(property.values())
-                    if values and values[0].get("label", "") in cls.valid_container_image_properties:
-                        opt_image = AadmPreprocessor.get_opt_image(opt_json_str)
-                        if opt_image:
-                            values[0]["value"] = opt_image
-            del data["optimization"]
-            return True, key, data
-        return False, key, data
-
-    @classmethod
-    def get_opt_image(cls, opt_json_string: str):
-        opt_json_string = opt_json_string.strip('\"')
-        opt = json.loads(opt_json_string)
-        MODAK_IMAGE_API = os.path.join(cls.MODAK_ENDPOINT, "get_image")
-        response = requests.post(
-            MODAK_IMAGE_API,
-            headers= { "Content-Type": "application/json" },
-            json= { "job": { "optimisation": opt.get("optimization", {}) } })
-        if response.status_code != 200:
-            print("Optimisation request error")
-            return ""
-        data = response.json()
-        image = data.get("job", {}).get("container_runtime", "").split("://", 1)
-        return image[1] if len(image) > 1 else image[0]
     
     #convert "files" from list to dict 
     #to configure path and url
@@ -201,8 +171,6 @@ class AadmPreprocessor:
             cls.reduce_type,
             cls.file_list_dict,
             cls.format_path_url,
-            cls.convert_opt_str,
-            cls.handle_optimization,
             ]
 
         changed = False
@@ -245,6 +213,9 @@ class AadmTransformer:
 
     # list of keys to remove from AADM
     skip_list = ["isNodeTemplate"]
+
+    #optimization parameters
+    valid_container_image_properties = ["image", "image_name"]
     
     #set types
     @staticmethod
@@ -298,6 +269,33 @@ class AadmTransformer:
         return data
 
     @classmethod
+    def get_opt_image(cls, opt_json_string: str):
+        opt_json_string = opt_json_string.strip('\"')
+        opt = json.loads(opt_json_string)
+        response = requests.post(
+            ModakConfig.get_modak_api_image(),
+            headers= { "Content-Type": "application/json" },
+            json= { "job": { "optimisation": opt.get("optimization", {}) } })
+        if response.status_code != 200:
+            print("Optimisation request error")
+            return ""
+        data = response.json()
+        image = data.get("job", {}).get("container_runtime", "").split("://", 1)
+        return image[1] if len(image) > 1 else image[0]
+
+    @classmethod
+    def transform_optimization(cls, value):
+        if "optimization" in value:
+            opt_json_str = value['optimization']
+            del value["optimization"]
+            if opt_json_str:
+                for property in value["properties"]:
+                    if property in cls.valid_container_image_properties:
+                        opt_image = cls.get_opt_image(opt_json_str)
+                        if opt_image:
+                            value["properties"][property] = opt_image
+
+    @classmethod
     def transform_aadm(cls, aadm):
         result = {
              "tosca_definitions_version": "tosca_simple_yaml_1_3",
@@ -323,6 +321,8 @@ class AadmTransformer:
                     section = "relationship_types"
                 else:
                     section = "node_types"
+
+            cls.transform_optimization(value)
 
             context = Context(section, 0)
             key = cls.transform_type(key, context)[1]

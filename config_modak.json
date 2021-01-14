@@ -1,3 +1,4 @@
 {
-    "MODAK_ENDPOINT_DEFAULT" : "http://77.231.202.209:5000"
+    "MODAK_ENDPOINT" : "http://77.231.202.209:5000",
+    "MODAK_API_IMAGE" : "/get_image"
 }
