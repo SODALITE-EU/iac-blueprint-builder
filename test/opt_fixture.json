@@ -1,0 +1,2314 @@
+{
+  "https://www.sodalite.eu/ontologies/workspace/1/u2ajoncuse1s7ft1be5mus6itg/AADM_ptpu7ffchlnv6g43mskap6bgfv": {
+    "type": "AbstractApplicationDeploymentModel",
+    "createdBy": "https://www.sodalite.eu/ontologies/workspace/1/u2ajoncuse1s7ft1be5mus6itg/27827d44-0f6c-11ea-8d71-362b9e155667",
+    "createdAt": "2021-01-04T14:59:55.911+02:00",
+    "version": "1",
+    "participants": [
+      "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-skyline-alignment",
+      "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-skyline-extractor",
+      "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-vm",
+      "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-docker-registry1",
+      "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-security-rules",
+      "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-docker-host",
+      "https://www.sodalite.eu/ontologies/workspace/1/optimization/topology_template_inputs_r54461fkm5092otiumijg1g4lg"
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-skyline-alignment": {
+    "type": "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerizedComponent",
+    "isNodeTemplate": true,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/exposed_ports": {
+          "value": [
+            "8080"
+          ],
+          "label": "exposed_ports"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/alias": {
+          "value": "snow-skyline-alignment",
+          "label": "alias"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/volumes": {
+          "value": [
+            "/tmp/docker:/tmp"
+          ],
+          "label": "volumes"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/registry_url": {
+          "value": "{ get_input: docker-registry-url }",
+          "label": "registry_url"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/image_name": {
+          "value": "snow-skyline-alignment:latest",
+          "label": "image_name"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/ports": {
+          "value": [
+            "80:8080",
+            "8081:8080"
+          ],
+          "label": "ports"
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-vm": {
+              "label": "optimization-vm"
+            },
+            "label": "host"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/registry": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-docker-registry1": {
+              "label": "optimization-docker-registry1"
+            },
+            "label": "registry"
+          }
+        }
+      }
+    ],
+    "optimization": "\"{ \"name\": \"ai_training.tensor_flow\", \"optimization\": { \"enable_opt_build\": true, \"enable_autotuning\": true, \"app_type\":\"ai_training\", \"opt_build\": { \"cpu_type\": \"arm\", \"acc_type\": \"nvidia\" }, \"autotuning\": { \"tuner\": \"cresta\", \"input\": \"begin parameters begin typing int NB end typing begin constraints range NB 80. 90, 100, 120, 140 end constraints end parameters begin build command: make -DNB=$NB end build begin run command: ./solver end run\" }, \"app_type-ai_training\": { \"config\": {  \"ai_framework\": \"tensorflow\" ,\"type\": \"translation\" ,\"distributed_training\": true ,\"layers\": 6 ,\"parameters\": 872684236 }, \"data\": {  \"location\": \"/some/data\"  ,\"basedata\": \"imagenet\"  ,\"size\": 67  ,\"count\": 4389  ,\"etl\": {  \"prefetch\": 100  ,\"cache\": 100 } } ,\"ai_framework-tensorflow\": {  \"version\": \"2.1\"  ,\"xla\": false } } } } \""
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-skyline-extractor": {
+    "type": "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerizedComponent",
+    "isNodeTemplate": true,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/volumes": {
+          "value": "/tmp/docker:/tmp",
+          "label": "volumes"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/alias": {
+          "value": "optimization-skyline-extractor",
+          "label": "alias"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/image_name": {
+          "value": "optimization-skyline-extractor:latest",
+          "label": "image_name"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/ports": {
+          "value": [
+            "8080:8080"
+          ],
+          "label": "ports"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/registry_url": {
+          "value": "{ get_input: docker-registry-url }",
+          "label": "registry_url"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/exposed_ports": {
+          "value": [
+            "8080"
+          ],
+          "label": "exposed_ports"
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-vm": {
+              "label": "optimization-vm"
+            },
+            "label": "host"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/registry": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-docker-registry1": {
+              "label": "optimization-docker-registry1"
+            },
+            "label": "registry"
+          }
+        }
+      }
+    ],
+    "optimization": "\"{ \"name\": \"ai_training.tensor_flow\", \"optimization\": { \"enable_opt_build\": true, \"enable_autotuning\": true, \"app_type\":\"ai_training\", \"opt_build\": { \"cpu_type\": \"x86\", \"acc_type\": \"nvidia\" }, \"autotuning\": { \"tuner\": \"cresta\", \"input\": \"begin parameters begin typing int NB end typing begin constraints range NB 80. 90, 100, 120, 140 end constraints end parameters begin build command: make -DNB=$NB end build begin run command: ./solver end run\" }, \"app_type-ai_training\": { \"config\": {  \"ai_framework\": \"tensorflow\" ,\"type\": \"translation\" ,\"distributed_training\": true ,\"layers\": 6 ,\"parameters\": 872684236 }, \"data\": {  \"location\": \"/some/data\"  ,\"basedata\": \"imagenet\"  ,\"size\": 67  ,\"count\": 4389  ,\"etl\": {  \"prefetch\": 100  ,\"cache\": 100 } } ,\"ai_framework-tensorflow\": {  \"version\": \"2.1\"  ,\"xla\": true } } } } \""
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-vm": {
+    "type": "https://www.sodalite.eu/ontologies/workspace/1/openstack/sodalite.nodes.OpenStack.VM",
+    "isNodeTemplate": true,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/image": {
+          "value": "{ get_input: image-name }",
+          "label": "image"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/security_groups": {
+          "value": "{ get_input: security-groups }",
+          "label": "security_groups"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/network": {
+          "value": "{ get_input: openstack-network-name }",
+          "label": "network"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/flavor": {
+          "value": "{ get_input: flavor-name }",
+          "label": "flavor"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/name": {
+          "value": "optimization-vm_am_10",
+          "label": "name"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/key_name": {
+          "value": "{ get_input: ssh-key-name }",
+          "label": "key_name"
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/protected_by": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-security-rules": {
+              "label": "optimization-security-rules"
+            },
+            "label": "protected_by"
+          }
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/os": {}
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {}
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-docker-registry1": {
+    "type": "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerRegistry",
+    "isNodeTemplate": true,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/docker_registry_url": {
+          "value": "{ get_input: docker-registry-url }",
+          "label": "docker_registry_url"
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/dependency": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-docker-host": {
+              "label": "optimization-docker-host"
+            },
+            "label": "dependency"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-vm": {
+              "label": "optimization-vm"
+            },
+            "label": "host"
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-security-rules": {
+    "type": "https://www.sodalite.eu/ontologies/workspace/1/openstack/sodalite.nodes.OpenStack.SecurityRules",
+    "isNodeTemplate": true,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/group_description": {
+          "value": "Optimization UC security group",
+          "label": "group_description"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/group_name": {
+          "value": "optimization",
+          "label": "group_name"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/ports": {
+          "specification": {
+            "component_ports": {
+              "protocol": "tcp",
+              "remote_ip_prefix": "0.0.0.0/0",
+              "port_range_max": 8081,
+              "port_range_min": 8080
+            },
+            "http_port": {
+              "port_range_max": 80,
+              "port_range_min": 80,
+              "protocol": "tcp",
+              "remote_ip_prefix": "0.0.0.0/0"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-docker-host": {
+    "type": "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerHost",
+    "isNodeTemplate": true,
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-vm": {
+              "label": "optimization-vm"
+            },
+            "label": "host"
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/optimization/topology_template_inputs_r54461fkm5092otiumijg1g4lg": {
+    "inputs": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/vehicleiot/security-groups": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/snow/demo-files-path": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/vehicleiot/docker-registry-cert-organization-name": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/vehicleiot/docker-network": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/snow/mysql-db-pass": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/vehicleiot/docker-registry-cert-country-name": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/vehicleiot/ssh-key-name": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/vehicleiot/openstack-network-name": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/vehicleiot/flavor-name": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/vehicleiot/docker-registry-url": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/vehicleiot/docker-registry-cert-email-address": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/vehicleiot/image-name": {
+          "specification": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerizedComponent": {
+    "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.SoftwareComponent",
+    "isNodeTemplate": false,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/command": {
+          "description": "Commands list for starting the container",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/list": {
+                "label": "list"
+              }
+            },
+            "default": "",
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/registry_url": {
+          "description": "The URL of the registry containing images",
+          "specification": {
+            "required": true,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/sleep": {
+          "description": "Sleep after image is deployed",
+          "specification": {
+            "required": false,
+            "default": 0,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/integer": {
+                "label": "integer"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/admin_credential": {
+          "description": "The optional credential that can be used to authenticate to the software component.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.datatypes.Credential": {
+                "label": "tosca.datatypes.Credential"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/ports": {
+          "description": "Port binding for the docker container \"exposed:internal\" like \"8081:8080\"",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/list": {
+                "label": "list"
+              }
+            },
+            "default": [],
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/docker_network_name": {
+          "description": "Alias name for docker container",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "default": "",
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/exposed_ports": {
+          "description": "Exposed ports of the container like \"8081\"",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "required": false,
+            "default": []
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/image_name": {
+          "description": "The name of the image on the host",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "required": true
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/volumes": {
+          "description": "A list of mounted volumes for the docker container \"host_path:container_path\" like \"/tmp/docker:/tmp\"",
+          "specification": {
+            "default": [],
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/list": {
+                "label": "list"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/restart_policy": {
+          "description": "Restart policy [no, on-failure, always, unless-stopped]",
+          "specification": {
+            "default": "always",
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/env": {
+          "description": "Map for docker enviroment variables key-value dictionary",
+          "specification": {
+            "default": "{}",
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/map": {
+                "label": "map"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/component_version": {
+          "description": "Domain-specific software component version.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/version": {
+                "label": "version"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/hostname": {
+          "description": "The container's hostname",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/alias": {
+          "description": "Alias name for docker container",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "required": true
+          }
+        }
+      }
+    ],
+    "attributes": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_name": {
+          "description": "Reflects the name of the Node Template as defined in the TOSCA service template. This name is not unique to the realized instance model of corresponding deployed application as each template in the model can result in one or more instances (e.g., scaled) when orchestrated to a provider environment.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_id": {
+          "description": "A unique identifier of the realized instance of a Node Template that derives from any TOSCA normative type",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/state": {
+          "description": "The state of the node instance.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "specification": {
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.HostedOn": {
+                "label": "tosca.relationships.HostedOn"
+              }
+            },
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Compute": {
+                "label": "tosca.nodes.Compute"
+              }
+            },
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Compute": {
+                "label": "tosca.capabilities.Compute"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/registry": {
+          "specification": {
+            "node": {
+              "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerRegistry": {
+                "label": "sodalite.nodes.DockerRegistry"
+              }
+            },
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            },
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.DependsOn": {
+                "label": "tosca.relationships.DependsOn"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/dependency": {
+          "specification": {
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Root": {
+                "label": "tosca.nodes.Root"
+              }
+            },
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.DependsOn": {
+                "label": "tosca.relationships.DependsOn"
+              }
+            },
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            },
+            "occurrences": [
+              "0",
+              "UNBOUNDED"
+            ]
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/network": {
+          "specification": {
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Network": {
+                "label": "tosca.capabilities.Network"
+              }
+            },
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.DependsOn": {
+                "label": "tosca.relationships.DependsOn"
+              }
+            },
+            "node": {
+              "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerNetwork": {
+                "label": "sodalite.nodes.DockerNetwork"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/feature": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "interfaces": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/Standard": {
+          "specification": {
+            "operations": {
+              "create": {
+                "implementation": {
+                  "primary": {
+                    "url": "http://160.40.52.200:8084/Ansibles/4169b989-43b8-4990-a245-fe6587bd0cd1",
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/docker/playbooks/add_container.yml"
+                  }
+                },
+                "inputs": {
+                  "env": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "env"
+                      }
+                    }
+                  },
+                  "docker_network_name": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "docker_network_name"
+                      }
+                    }
+                  },
+                  "registry_url": {
+                    "default": {
+                      "get_property": {
+                        "req_cap": "docker/sodalite.nodes.DockerizedComponent.registry",
+                        "entity": "SELF",
+                        "property": "docker_registry_url"
+                      }
+                    }
+                  },
+                  "public_address": {
+                    "default": {
+                      "get_attribute": {
+                        "attribute": "public_address",
+                        "req_cap": "docker/sodalite.nodes.DockerHost.host",
+                        "entity": "SELF"
+                      }
+                    }
+                  },
+                  "command": {
+                    "default": {
+                      "get_property": {
+                        "property": "command",
+                        "entity": "SELF"
+                      }
+                    }
+                  },
+                  "sleep": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "sleep"
+                      }
+                    }
+                  },
+                  "alias": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "alias"
+                      }
+                    }
+                  },
+                  "ports": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "ports"
+                      }
+                    }
+                  },
+                  "volumes": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "volumes"
+                      }
+                    }
+                  },
+                  "exposed_ports": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "exposed_ports"
+                      }
+                    }
+                  },
+                  "image_name": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "image_name"
+                      }
+                    }
+                  },
+                  "restart_policy": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "restart_policy"
+                      }
+                    }
+                  }
+                }
+              },
+              "delete": {
+                "implementation": {
+                  "primary": {
+                    "url": "http://160.40.52.200:8084/Ansibles/21eec278-6403-490f-869d-8f339e3a2a41",
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/docker/playbooks/remove_container.yml"
+                  }
+                },
+                "inputs": {
+                  "alias": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "alias"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.interfaces.node.lifecycle.Standard": {
+                "label": "tosca.interfaces.node.lifecycle.Standard"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/openstack/sodalite.nodes.OpenStack.VM": {
+    "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Compute",
+    "isNodeTemplate": false,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/username": {
+          "description": "Username for SSH connection",
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/floating_ip_pools": {
+          "description": "Name of floating IP pool from which to choose a floating IP",
+          "specification": {
+            "required": false,
+            "default": "",
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/name": {
+          "description": "Name that should be given to the VM in OpenStack",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/flavor": {
+          "description": "OpenStack flavor id (flavor names are not accepted)",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/key_name": {
+          "description": "OpenStack SSH key name that should be placed on the VM",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/network": {
+          "description": "OpenStack network id (network names are not accepted)",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/timeout": {
+          "description": "Timeout to instantiate the VM",
+          "specification": {
+            "required": false,
+            "default": 600,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/integer": {
+                "label": "integer"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/image": {
+          "description": "OpenStack image id (image names are not accepted)",
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/include_exporter": {
+          "description": "Flag to include exporter",
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/boolean": {
+                "label": "boolean"
+              }
+            },
+            "default": true
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/userdata": {
+          "description": "Additional userdata applied to configure the VM",
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "default": ""
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/security_groups": {
+          "description": "OpenStack names of the security groups to which the instance should be added.Comma separated string.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "required": false
+          }
+        }
+      }
+    ],
+    "attributes": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/ports": {
+          "description": "The list of logical ports assigned to the compute host instance and information about them.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/map": {
+                "label": "map"
+              }
+            },
+            "entry_schema": {
+              "type": {
+                "https://www.sodalite.eu/ontologies/tosca/tosca.datatypes.network.PortInfo": {
+                  "label": "tosca.datatypes.network.PortInfo"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_id": {
+          "description": "A unique identifier of the realized instance of a Node Template that derives from any TOSCA normative type",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/networks": {
+          "description": "The list of logical networks assigned to the compute host instance and information about them.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/map": {
+                "label": "map"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/entry_schema": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.datatypes.network.NetworkInfo": {
+                "label": "tosca.datatypes.network.NetworkInfo"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_name": {
+          "description": "Reflects the name of the Node Template as defined in the TOSCA service template. This name is not unique to the realized instance model of corresponding deployed application as each template in the model can result in one or more instances (e.g., scaled) when orchestrated to a provider environment.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/private_address": {
+          "description": "The primary private IP address assigned by the cloud provider that applications may use to access the Compute node.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/state": {
+          "description": "The state of the node instance.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/public_address": {
+          "description": "The primary public IP address assigned by the cloud provider that applications may use to access the Compute node.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/ansible_ip": {
+          "description": "ansible ipv4",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/id": {
+          "description": "OpenStack id of the VM",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/local_storage": {
+          "specification": {
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Attachment": {
+                "label": "tosca.capabilities.Attachment"
+              }
+            },
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Storage.BlockStorage": {
+                "label": "tosca.nodes.Storage.BlockStorage"
+              }
+            },
+            "occurrences": [
+              "0",
+              "UNBOUNDED"
+            ],
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.AttachesTo": {
+                "label": "tosca.relationships.AttachesTo"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/protected_by": {
+          "specification": {
+            "node": {
+              "https://www.sodalite.eu/ontologies/workspace/1/openstack/sodalite.nodes.OpenStack.SecurityRules": {
+                "label": "sodalite.nodes.OpenStack.SecurityRules"
+              }
+            },
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            },
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.DependsOn": {
+                "label": "tosca.relationships.DependsOn"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/dependency": {
+          "specification": {
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.DependsOn": {
+                "label": "tosca.relationships.DependsOn"
+              }
+            },
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Root": {
+                "label": "tosca.nodes.Root"
+              }
+            },
+            "occurrences": [
+              "0",
+              "UNBOUNDED"
+            ],
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/endpoint": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Endpoint.Admin": {
+                "label": "tosca.capabilities.Endpoint.Admin"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/os": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.OperatingSystem": {
+                "label": "tosca.capabilities.OperatingSystem"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/feature": {
+          "specification": {
+            "valid_source_types": {},
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/binding": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.network.Bindable": {
+                "label": "tosca.capabilities.network.Bindable"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Compute": {
+                "label": "tosca.capabilities.Compute"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/scalable": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Scalable": {
+                "label": "tosca.capabilities.Scalable"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "specification": {
+            "valid_source_types": [
+              "tosca.nodes.SoftwareComponent"
+            ],
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Compute": {
+                "label": "tosca.capabilities.Compute"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "interfaces": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/Standard": {
+          "specification": {
+            "operations": {
+              "create": {
+                "inputs": {
+                  "key_name": {
+                    "default": {
+                      "get_property": {
+                        "property": "key_name",
+                        "entity": "SELF"
+                      }
+                    }
+                  },
+                  "userdata": {
+                    "default": {
+                      "get_property": {
+                        "property": "userdata",
+                        "entity": "SELF"
+                      }
+                    }
+                  },
+                  "timeout": {
+                    "default": {
+                      "get_property": {
+                        "property": "timeout",
+                        "entity": "SELF"
+                      }
+                    }
+                  },
+                  "vm_name": {
+                    "default": {
+                      "get_property": {
+                        "property": "name",
+                        "entity": "SELF"
+                      }
+                    }
+                  },
+                  "include_exporter": {
+                    "default": {
+                      "get_property": {
+                        "property": "include_exporter",
+                        "entity": "SELF"
+                      }
+                    }
+                  },
+                  "floating_ip_pools": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "floating_ip_pools"
+                      }
+                    }
+                  },
+                  "ansible_user": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "username"
+                      }
+                    }
+                  },
+                  "flavor": {
+                    "default": {
+                      "get_property": {
+                        "property": "flavor",
+                        "entity": "SELF"
+                      }
+                    }
+                  },
+                  "network": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "network"
+                      }
+                    }
+                  },
+                  "image": {
+                    "default": {
+                      "get_property": {
+                        "property": "image",
+                        "entity": "SELF"
+                      }
+                    }
+                  },
+                  "security_groups": {
+                    "default": {
+                      "get_property": {
+                        "property": "security_groups",
+                        "entity": "SELF"
+                      }
+                    }
+                  }
+                },
+                "implementation": {
+                  "primary": {
+                    "url": "http://160.40.52.200:8084/Ansibles/7ef2d841-67f8-4fc4-a212-ac5ceecdb4bb",
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/openstack/playbooks/vm_create.yml"
+                  },
+                  "dependencies": {
+                    "files": [
+                      {
+                        "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/openstack/playbooks/egi_refresh_token.yml",
+                        "url": "http://160.40.52.200:8084/Ansibles/555d66ae-6094-4f21-ae35-693f6c011db5"
+                      }
+                    ]
+                  }
+                }
+              },
+              "delete": {
+                "inputs": {
+                  "id": {
+                    "default": {
+                      "get_attribute": {
+                        "entity": "SELF",
+                        "attribute": "id"
+                      }
+                    }
+                  }
+                },
+                "implementation": {
+                  "primary": {
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/openstack/playbooks/vm_delete.yml",
+                    "url": "http://160.40.52.200:8084/Ansibles/806dbf7b-3fd2-40ff-af17-c53c643cb963"
+                  },
+                  "dependencies": {
+                    "files": [
+                      {
+                        "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/openstack/playbooks/egi_refresh_token.yml",
+                        "url": "http://160.40.52.200:8084/Ansibles/4f45ca27-3d63-4c7a-955c-a2d478489ccd"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.interfaces.node.lifecycle.Standard": {
+                "label": "tosca.interfaces.node.lifecycle.Standard"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerRegistry": {
+    "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.SoftwareComponent",
+    "isNodeTemplate": false,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/component_version": {
+          "description": "Domain-specific software component version.",
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/version": {
+                "label": "version"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/docker_registry_url": {
+          "description": "Docker Hub login",
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/docker_user": {
+          "description": "Docker Hub login",
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "default": ""
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/admin_credential": {
+          "description": "The optional credential that can be used to authenticate to the software component.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.datatypes.Credential": {
+                "label": "tosca.datatypes.Credential"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/docker_pass": {
+          "description": "Docker Hub password",
+          "specification": {
+            "required": false,
+            "default": "",
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "attributes": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_id": {
+          "description": "A unique identifier of the realized instance of a Node Template that derives from any TOSCA normative type",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/state": {
+          "description": "The state of the node instance.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_name": {
+          "description": "Reflects the name of the Node Template as defined in the TOSCA service template. This name is not unique to the realized instance model of corresponding deployed application as each template in the model can result in one or more instances (e.g., scaled) when orchestrated to a provider environment.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/dependency": {
+          "specification": {
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            },
+            "occurrences": [
+              "0",
+              "UNBOUNDED"
+            ],
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Root": {
+                "label": "tosca.nodes.Root"
+              }
+            },
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.DependsOn": {
+                "label": "tosca.relationships.DependsOn"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "specification": {
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.HostedOn": {
+                "label": "tosca.relationships.HostedOn"
+              }
+            },
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Compute": {
+                "label": "tosca.nodes.Compute"
+              }
+            },
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Compute": {
+                "label": "tosca.capabilities.Compute"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/feature": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "interfaces": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/Standard": {
+          "specification": {
+            "operations": {
+              "create": {
+                "implementation": {
+                  "primary": {
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/docker/playbooks/login_user.yml",
+                    "url": "http://160.40.52.200:8084/Ansibles/f5d99ff5-d308-43c9-b473-713ddedfed0c"
+                  }
+                },
+                "inputs": {
+                  "docker_pass": {
+                    "default": {
+                      "get_property": {
+                        "property": "docker_pass",
+                        "entity": "SELF"
+                      }
+                    }
+                  },
+                  "docker_registry_url": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "docker_registry_url"
+                      }
+                    }
+                  },
+                  "docker_user": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "docker_user"
+                      }
+                    }
+                  }
+                }
+              },
+              "delete": {
+                "implementation": {
+                  "primary": {
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/docker/playbooks/logout_user.yml",
+                    "url": "http://160.40.52.200:8084/Ansibles/2065f492-fbc9-43a3-8e3f-918909f9462e"
+                  }
+                },
+                "inputs": {
+                  "docker_registry_url": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "docker_registry_url"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.interfaces.node.lifecycle.Standard": {
+                "label": "tosca.interfaces.node.lifecycle.Standard"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/openstack/sodalite.nodes.OpenStack.SecurityRules": {
+    "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Root",
+    "isNodeTemplate": false,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/ports": {
+          "specification": {
+            "constraints": {
+              "min_length": 1
+            },
+            "entry_schema": {
+              "type": "org.sodalite.dsl.rM.impl.EPREFIX_TYPEImpl@49147941 (type: sodalite.datatypes.OpenStack.SecurityRule) (module: openstack)"
+            },
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/map": {
+                "label": "map"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/group_description": {
+          "description": "Description of the security group in openstack",
+          "specification": {
+            "required": true,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/group_name": {
+          "description": "Name of the security group in openstack.",
+          "specification": {
+            "required": true,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "attributes": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_id": {
+          "description": "A unique identifier of the realized instance of a Node Template that derives from any TOSCA normative type",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_name": {
+          "description": "Reflects the name of the Node Template as defined in the TOSCA service template. This name is not unique to the realized instance model of corresponding deployed application as each template in the model can result in one or more instances (e.g., scaled) when orchestrated to a provider environment.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/state": {
+          "description": "The state of the node instance.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/dependency": {
+          "specification": {
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Root": {
+                "label": "tosca.nodes.Root"
+              }
+            },
+            "occurrences": [
+              "0",
+              "UNBOUNDED"
+            ],
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.DependsOn": {
+                "label": "tosca.relationships.DependsOn"
+              }
+            },
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/feature": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "interfaces": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/Standard": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.interfaces.node.lifecycle.Standard": {
+                "label": "tosca.interfaces.node.lifecycle.Standard"
+              }
+            },
+            "operations": {
+              "delete": {
+                "implementation": {
+                  "primary": {
+                    "url": "http://160.40.52.200:8084/Ansibles/f3a3ce5e-c5ec-47f4-9d7b-b49eb121131c",
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/openstack/playbooks/security_rule_delete.yml"
+                  },
+                  "dependencies": {
+                    "files": [
+                      {
+                        "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/openstack/playbooks/egi_refresh_token.yml",
+                        "url": "http://160.40.52.200:8084/Ansibles/9c58bf20-8f02-49b1-9a47-539429c7eebb"
+                      }
+                    ]
+                  }
+                },
+                "inputs": {
+                  "group_name": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "group_name"
+                      }
+                    }
+                  }
+                }
+              },
+              "create": {
+                "implementation": {
+                  "dependencies": {
+                    "files": [
+                      {
+                        "url": "http://160.40.52.200:8084/Ansibles/da585d33-bb20-40a7-b582-5ae965ddedf5",
+                        "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/openstack/playbooks/egi_refresh_token.yml"
+                      }
+                    ]
+                  },
+                  "primary": {
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/openstack/playbooks/security_rule_create.yml",
+                    "url": "http://160.40.52.200:8084/Ansibles/98b967a0-8001-4275-a5e7-e716b5183937"
+                  }
+                },
+                "inputs": {
+                  "group_name": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "group_name"
+                      }
+                    }
+                  },
+                  "group_description": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "group_description"
+                      }
+                    }
+                  },
+                  "ports": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "ports"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerHost": {
+    "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.SoftwareComponent",
+    "isNodeTemplate": false,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/admin_credential": {
+          "description": "The optional credential that can be used to authenticate to the software component.",
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.datatypes.Credential": {
+                "label": "tosca.datatypes.Credential"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/component_version": {
+          "description": "Domain-specific software component version.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/version": {
+                "label": "version"
+              }
+            },
+            "required": false
+          }
+        }
+      }
+    ],
+    "attributes": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/state": {
+          "description": "The state of the node instance.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_id": {
+          "description": "A unique identifier of the realized instance of a Node Template that derives from any TOSCA normative type",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/public_address": {
+          "description": "Host's IP",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_name": {
+          "description": "Reflects the name of the Node Template as defined in the TOSCA service template. This name is not unique to the realized instance model of corresponding deployed application as each template in the model can result in one or more instances (e.g., scaled) when orchestrated to a provider environment.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "specification": {
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.HostedOn": {
+                "label": "tosca.relationships.HostedOn"
+              }
+            },
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Compute": {
+                "label": "tosca.nodes.Compute"
+              }
+            },
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Compute": {
+                "label": "tosca.capabilities.Compute"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/dependency": {
+          "specification": {
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Root": {
+                "label": "tosca.nodes.Root"
+              }
+            },
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.DependsOn": {
+                "label": "tosca.relationships.DependsOn"
+              }
+            },
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            },
+            "occurrences": [
+              "0",
+              "UNBOUNDED"
+            ]
+          }
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "specification": {
+            "valid_source_types": [
+              "sodalite.nodes.DockerizedComponent"
+            ],
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Compute": {
+                "label": "tosca.capabilities.Compute"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/feature": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "interfaces": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/Standard": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.interfaces.node.lifecycle.Standard": {
+                "label": "tosca.interfaces.node.lifecycle.Standard"
+              }
+            },
+            "operations": {
+              "delete": {
+                "implementation": {
+                  "primary": {
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/docker/playbooks/delete_docker_host.yml",
+                    "url": "http://160.40.52.200:8084/Ansibles/993af960-012f-4d2a-bdcb-bbfa1636b3c4"
+                  }
+                }
+              },
+              "create": {
+                "inputs": {
+                  "host_public_address": {
+                    "default": {
+                      "get_attribute": {
+                        "attribute": "public_address",
+                        "req_cap": "docker/sodalites.nodes.DockerHost.host",
+                        "entity": "SELF"
+                      }
+                    }
+                  }
+                },
+                "implementation": {
+                  "primary": {
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/docker/playbooks/create_docker_host.yml",
+                    "url": "http://160.40.52.200:8084/Ansibles/5e200c13-4697-474b-aa1e-04d45af33809"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerNetwork": {
+    "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.SoftwareComponent",
+    "isNodeTemplate": false,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/admin_credential": {
+          "description": "The optional credential that can be used to authenticate to the software component.",
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.datatypes.Credential": {
+                "label": "tosca.datatypes.Credential"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/component_version": {
+          "description": "Domain-specific software component version.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/version": {
+                "label": "version"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/name": {
+          "description": "The name of the network",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "required": true
+          }
+        }
+      }
+    ],
+    "attributes": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_id": {
+          "description": "A unique identifier of the realized instance of a Node Template that derives from any TOSCA normative type",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_name": {
+          "description": "Reflects the name of the Node Template as defined in the TOSCA service template. This name is not unique to the realized instance model of corresponding deployed application as each template in the model can result in one or more instances (e.g., scaled) when orchestrated to a provider environment.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/state": {
+          "description": "The state of the node instance.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/dependency": {
+          "specification": {
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.DependsOn": {
+                "label": "tosca.relationships.DependsOn"
+              }
+            },
+            "occurrences": [
+              "0",
+              "UNBOUNDED"
+            ],
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            },
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Root": {
+                "label": "tosca.nodes.Root"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "specification": {
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Compute": {
+                "label": "tosca.capabilities.Compute"
+              }
+            },
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.HostedOn": {
+                "label": "tosca.relationships.HostedOn"
+              }
+            },
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Compute": {
+                "label": "tosca.nodes.Compute"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/feature": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/network": {
+          "specification": {
+            "valid_source_types": [
+              "sodalite.nodes.DockerizedComponent"
+            ],
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Network": {
+                "label": "tosca.capabilities.Network"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "interfaces": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/Standard": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.interfaces.node.lifecycle.Standard": {
+                "label": "tosca.interfaces.node.lifecycle.Standard"
+              }
+            },
+            "operations": {
+              "create": {
+                "implementation": {
+                  "primary": {
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/docker/playbooks/add_network.yml",
+                    "url": "http://160.40.52.200:8084/Ansibles/f5ccfa2d-39e0-44f4-ad87-7887ba20a4a2"
+                  }
+                },
+                "inputs": {
+                  "docker_network_name": {
+                    "default": {
+                      "get_property": {
+                        "entity": "SELF",
+                        "property": "name"
+                      }
+                    }
+                  }
+                }
+              },
+              "delete": {
+                "implementation": {
+                  "primary": {
+                    "path": "/home/yosu/Projects/Sodalite/Git/iac-management/use-cases/modules/docker/playbooks/remove_network.yml",
+                    "url": "http://160.40.52.200:8084/Ansibles/14852216-9b96-431a-b168-cda334857272"
+                  }
+                },
+                "inputs": {
+                  "docker_network_name": {
+                    "default": {
+                      "get_property": {
+                        "property": "name",
+                        "entity": "SELF"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}
