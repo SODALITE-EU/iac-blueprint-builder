@@ -5,7 +5,7 @@ import os
 import requests
 import pathlib
 
-from yaml import ScalarNode, CollectionNode, SequenceNode
+from yaml import ScalarNode, CollectionNode, SequenceNode, MappingNode
 
 
 class ModakConfig:
@@ -56,6 +56,17 @@ class AadmPreprocessor:
                 if isinstance(item, dict):
                     for key_int, value in item.items():
                         result[key_int] = value
+            return True, key, result
+        return False, key, data
+
+    #to convert get_input string to dict
+    @classmethod
+    def convert_str(cls, key, data):
+        if isinstance(data, str) and "get_input" in data:
+            get_str = data.strip("{ , }").split(":")
+            str_dict = '{{ "{}" : "{}"}}'.format(get_str[0],get_str[1].strip(" "))
+            result = json.loads(str_dict)
+            del data
             return True, key, result
         return False, key, data
 
@@ -171,6 +182,7 @@ class AadmPreprocessor:
             cls.reduce_type,
             cls.file_list_dict,
             cls.format_path_url,
+            cls.convert_str
             ]
 
         changed = False
@@ -356,6 +368,14 @@ class ToscaDumper(yaml.SafeDumper):
             for key, value in node.value:
                 if isinstance(value, CollectionNode):
                     value.flow_style = True
+        
+        # output inputs in json-like format
+        if (isinstance(index, ScalarNode)
+                and index.value == "properties"):
+            for key, value in node.value:
+                if (isinstance(value, MappingNode)
+                        and "get_input" in str(value.value)):
+                    value.flow_style = True    
 
         if (isinstance(node, SequenceNode)
                 and isinstance(index, ScalarNode)
