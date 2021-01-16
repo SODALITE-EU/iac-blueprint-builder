@@ -118,3 +118,31 @@ def test_parser_opt():
     image_name = opt_not_found_component_template.get("properties").get("image_name")
 
     assert image_name == opt_not_found_expected_container_runtime
+
+
+def test_parser_opt_job():
+
+    # this component has optimisation field
+    opt_component = "batch-app"
+    # expected container for $opt_component
+    opt_expected_container_runtime = "modakopt/modak:tensorflow-2.1-gpu-src"
+
+    # this component has optimisation field, but optimised container not found
+    job_script_component = "batch-app-job-hpc"
+
+
+    test = TestConfig("opt_job", "test/opt_job_fixture.json")
+    parser.parse_data(test.parser_dest(), test.fixture())
+    service = test.service()
+
+    opt_component_template = service.get("topology_template").get("node_templates").get(opt_component)
+    image = opt_component_template.get("properties").get("container_runtime")
+
+    assert image == opt_expected_container_runtime
+
+    job_script_component_template = service.get("topology_template").get("node_templates").get(job_script_component)
+    content = job_script_component_template.get("properties").get("content", "")
+
+    assert len(content) > 0
+
+    assert "#PBS -N skyline-extraction-training" in content
