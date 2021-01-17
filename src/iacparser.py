@@ -53,8 +53,7 @@ class ModakConfig:
             print("Optimisation request error")
             return ""
         data = response.json()
-        image = data.get("job", {}).get("container_runtime", "").split("://", 1)
-        return image[1] if len(image) > 1 else image[0]
+        return data.get("job", {}).get("container_runtime", "")
 
     @classmethod
     def get_opt_job_content(cls, app, target, job_options, opt_json_string):

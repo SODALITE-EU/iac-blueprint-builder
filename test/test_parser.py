@@ -97,7 +97,7 @@ def test_parser_opt():
     # this component has optimisation field
     opt_component = "optimization-skyline-extractor"
     # expected container for $opt_component
-    opt_expected_container_runtime = "modakopt/modak:tensorflow-2.1-gpu-src"
+    opt_expected_container_runtime = "docker://modakopt/modak:tensorflow-2.1-gpu-src"
 
     # this component has optimisation field, but optimised container not found
     opt_not_found_component = "optimization-skyline-alignment"
@@ -125,7 +125,7 @@ def test_parser_opt_job():
     # this component has optimisation field
     opt_component = "batch-app"
     # expected container for $opt_component
-    opt_expected_container_runtime = "modakopt/modak:tensorflow-2.1-gpu-src"
+    opt_expected_container_runtime = "docker://modakopt/modak:tensorflow-2.1-gpu-src"
 
     # this component has optimisation field, but optimised container not found
     job_script_component = "batch-app-job-hpc"
