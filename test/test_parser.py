@@ -146,3 +146,6 @@ def test_parser_opt_job():
     assert len(content) > 0
 
     assert "#PBS -N skyline-extraction-training" in content
+    assert "#PBS -q ssd" in content
+    assert "#PBS -l nodes=1:gpus=1:ssd" in content
+    assert "#PBS -l procs=40" in content

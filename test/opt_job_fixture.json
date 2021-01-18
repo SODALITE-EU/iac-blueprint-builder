@@ -196,6 +196,12 @@
         }
       },
       {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/queue": {
+          "value": "ssd",
+          "label": "queue"
+        }
+      },
+      {
         "https://www.sodalite.eu/ontologies/workspace/1/openstack/standard_output_file": {
           "value": "skyline-extraction-training.out",
           "label": "standard_output_file"
