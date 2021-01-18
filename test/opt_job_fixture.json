@@ -196,12 +196,6 @@
         }
       },
       {
-        "https://www.sodalite.eu/ontologies/workspace/1/openstack/request_specific_nodes": {
-          "value": "ssd",
-          "label": "request_specific_nodes"
-        }
-      },
-      {
         "https://www.sodalite.eu/ontologies/workspace/1/openstack/standard_output_file": {
           "value": "skyline-extraction-training.out",
           "label": "standard_output_file"
