@@ -13,6 +13,8 @@ class ModakConfig:
     config_path = pathlib.Path(__file__).parent / pathlib.Path('../config_modak.json')
     config = None
 
+    valid_container_image_properties = ["image", "image_name", "container_runtime"]
+
     @classmethod
     def init(cls):
         if not cls.config:
@@ -28,6 +30,51 @@ class ModakConfig:
         cls.init()
         api_image = os.getenv("MODAK_API_IMAGE", cls.config.get("MODAK_API_IMAGE", "/get_image"))
         return cls.get_modak_endpoint() + api_image
+
+    @classmethod
+    def get_modak_api_job(cls):
+        cls.init()
+        api_image = os.getenv("MODAK_API_JOB", cls.config.get("MODAK_API_JOB", "/get_job_content"))
+        return cls.get_modak_endpoint() + api_image
+
+    @classmethod
+    def is_valid_image_property(cls, property):
+        return property in cls.valid_container_image_properties
+
+    @classmethod
+    def get_opt_image(cls, opt_json_string: str):
+        opt_json_string = opt_json_string.strip('\"')
+        opt = json.loads(opt_json_string)
+        response = requests.post(
+            cls.get_modak_api_image(),
+            headers= { "Content-Type": "application/json" },
+            json= { "job": { "optimisation": opt.get("optimization", {}) } })
+        if response.status_code != 200:
+            print("Optimisation request error")
+            return ""
+        data = response.json()
+        return data.get("job", {}).get("container_runtime", "")
+
+    @classmethod
+    def get_opt_job_content(cls, app, target, job_options, opt_json_string):
+        opt_json_string = opt_json_string.strip('\"')
+        opt = json.loads(opt_json_string)
+        response = requests.post(
+            cls.get_modak_api_job(),
+            headers= { "Content-Type": "application/json" },
+            json= { 
+                "job": { 
+                    "application": app,
+                    "target": target,
+                    "job_options": job_options,
+                    "optimisation": opt.get("optimization", {}) 
+                } 
+            })
+        if response.status_code != 200:
+            print("Optimisation request error")
+            return ""
+        data = response.json()
+        return data.get("job", {}).get("job_content", "")
 
 
 class Context:
@@ -225,9 +272,6 @@ class AadmTransformer:
 
     # list of keys to remove from AADM
     skip_list = ["isNodeTemplate"]
-
-    #optimization parameters
-    valid_container_image_properties = ["image", "image_name"]
     
     #set types
     @staticmethod
@@ -281,31 +325,59 @@ class AadmTransformer:
         return data
 
     @classmethod
-    def get_opt_image(cls, opt_json_string: str):
-        opt_json_string = opt_json_string.strip('\"')
-        opt = json.loads(opt_json_string)
-        response = requests.post(
-            ModakConfig.get_modak_api_image(),
-            headers= { "Content-Type": "application/json" },
-            json= { "job": { "optimisation": opt.get("optimization", {}) } })
-        if response.status_code != 200:
-            print("Optimisation request error")
-            return ""
-        data = response.json()
-        image = data.get("job", {}).get("container_runtime", "").split("://", 1)
-        return image[1] if len(image) > 1 else image[0]
+    def transform_optimization(cls, result):
+        opt_nodes = {}
+        exec_nodes = {}
+
+        # extract optimization nodes
+        for key, value in result["node_templates"].items():
+            if value.get("optimization"):
+                opt_nodes[key] = value.get("optimization")
+                value.pop("optimization", None)
+
+        # extract execution nodes
+        for key, value in result["node_templates"].items():
+            reqs = value.get("requirements", [])
+            for req in reqs:
+                app_req = req.get("application", "")
+                if app_req in opt_nodes:
+                    exec_nodes[key] = app_req
+
+        # modify image properties for optimization nodes
+        for node, opts in opt_nodes.items():
+            for property in result["node_templates"][node]["properties"]:
+                if ModakConfig.is_valid_image_property(property):
+                    opt_image = ModakConfig.get_opt_image(opts)
+                    if opt_image:
+                        result["node_templates"][node]["properties"][property] = opt_image
+
+        # modify content properties for execution nodes
+        for node, opt_node in exec_nodes.items():
+            host_node = {}
+            for req in result["node_templates"][node].get("requirements", []):
+                host_req = req.get("host", "")
+                if host_req:
+                    host_node = result["node_templates"][host_req]
+
+            content = ModakConfig.get_opt_job_content(
+                app = result["node_templates"][opt_node]["properties"],
+                target = cls.resolve_optimization_target(host_node),
+                job_options = result["node_templates"][node]["properties"],
+                opt_json_string = opt_nodes[opt_node],
+            )
+            result["node_templates"][node]["properties"]["content"] = content
 
     @classmethod
-    def transform_optimization(cls, value):
-        if "optimization" in value:
-            opt_json_str = value['optimization']
-            del value["optimization"]
-            if opt_json_str:
-                for property in value["properties"]:
-                    if property in cls.valid_container_image_properties:
-                        opt_image = cls.get_opt_image(opt_json_str)
-                        if opt_image:
-                            value["properties"][property] = opt_image
+    def resolve_optimization_target(cls, node):
+        target = {}
+        scheduler = node.get("properties", {}).get("scheduler")
+        if scheduler:
+            target["job_scheduler_type"] = scheduler
+        opt_caps = node.get("capabilities", {}).get("optimisations", {})
+        name = opt_caps.get("properties", {}).get("target")
+        if name:
+            target["name"] = name
+        return target
 
     @classmethod
     def transform_aadm(cls, aadm):
@@ -334,17 +406,16 @@ class AadmTransformer:
                 else:
                     section = "node_types"
 
-            cls.transform_optimization(value)
-
             context = Context(section, 0)
             key = cls.transform_type(key, context)[1]
             result[section][key] = cls.transform(value, context)
+
+        cls.transform_optimization(result)
 
         result["topology_template"] = {}
         result["topology_template"]["node_templates"] = result["node_templates"]
         del result["node_templates"]
         return result
-
 
 class ToscaDumper(yaml.SafeDumper):
     def __init__(self, stream,
@@ -371,7 +442,7 @@ class ToscaDumper(yaml.SafeDumper):
         
         # output inputs in json-like format
         if (isinstance(index, ScalarNode)
-                and index.value == "properties"):
+                and index.value in ["properties", "attributes"]):
             for key, value in node.value:
                 if (isinstance(value, MappingNode)
                         and "get_input" in str(value.value)):
@@ -386,7 +457,6 @@ class ToscaDumper(yaml.SafeDumper):
                     ele.tag = AadmPreprocessor.convert_int(ele.tag)
 
         super().serialize_node(node, parent, index)
-
 
 def parse_data(name, data):
     preprocessed_aadm = AadmPreprocessor.preprocess_aadm(data)
