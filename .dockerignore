@@ -1,0 +1,27 @@
+Jenkinsfile
+.pytest_cache
+.gitignore
+Dockerfile
+LICENSE
+README.md
+sonar-project.properties
+validate_tag.sh
+make_docker.sh
+
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# CI/CD
+venv-test
+venv-deploy
+openstack-blueprint/modules/
+openstack-blueprint/export.sh
+openstack-blueprint/.opera

@@ -4,3 +4,4 @@ requests
 pyyaml
 flask_swagger_ui
 pytest
+pytest-cov
