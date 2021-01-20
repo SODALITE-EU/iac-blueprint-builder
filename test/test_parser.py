@@ -82,13 +82,22 @@ def test_artifacts_extraction():
                  'playbooks/config.json.tmpl'])
 
     test = TestConfig("fixture")
-    parsed_data = parser.parse_data(test.parser_dest(), test.fixture())
 
+    parsed_data = parser.parse_data(test.parser_dest(), test.fixture())
     pds = []
     exs = []
     for i in range(0, 3):
-        pds.append(set(parsed_data[i]))
-        exs.append(set(expected[i]))
+        pds.append(parsed_data[i])
+        exs.append(expected[i])
+    assert exs == pds
+
+    # check values reset
+    parsed_data = parser.parse_data(test.parser_dest(), test.fixture())
+    pds = []
+    exs = []
+    for i in range(0, 3):
+        pds.append(parsed_data[i])
+        exs.append(expected[i])
     assert exs == pds
         
 
