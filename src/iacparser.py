@@ -92,6 +92,12 @@ class AadmPreprocessor:
     # list of keys to convert
     convert_list_dict = ["properties", "attributes", "interfaces", "capabilities"]
 
+    #path and urls
+    ansible_urls = []
+    ansible_paths = []
+    dependency_urls = []
+    dependency_paths = []
+
     # data in AADM JSON nodes is presented as lists
     # some lists must be converted to maps (dictionaries)
     # in order to be TOSCA complaint
@@ -119,7 +125,7 @@ class AadmPreprocessor:
 
     @classmethod
     def collapse_labels(cls, key, data):
-        label = AadmPreprocessor.get_type(key)
+        label = AadmPreprocessor.get_url(key)
         if (isinstance(data, dict)
                 and "label" in data
                 and data["label"] == label):
@@ -149,29 +155,37 @@ class AadmPreprocessor:
             return True, key, data
         return False, key, data
     
-    #convert "files" from list to dict 
-    #to configure path and url
-    @staticmethod
-    def file_list_dict(key, data):
+    #formatting dependencies path and url
+    @classmethod
+    def dep_path_url(cls, key, data):
         if (isinstance(data, dict)
-                and "files" in data
-                and isinstance(data["files"], list)):
-            list_dict = data["files"][0]
-            data["files"] = list_dict
-            return True, key, data
+                and "files" in data):
+            dep_path= []
+            for ele in data["files"]:
+                if("relative_path" in data):
+                    path = '{}/{}'.format(data["relative_path"],cls.get_url(ele["path"]))
+                else:
+                    path_list = cls.get_path(ele["path"])
+                    path = '{}/{}'.format(path_list[0],path_list[1])
+                dep_path.append(path)
+                cls.dependency_urls.append(ele["url"])
+                if path not in cls.dependency_paths:
+                    cls.dependency_paths.append(path)
+            return True, key, dep_path
         return False, key, data
 
-    #formatting path and url to download playbooks
-    @staticmethod
-    def format_path_url(key,data):
+    #formatting primary path and url
+    @classmethod
+    def pri_path_url(cls, key, data):
         if (isinstance(data, dict)
-                and "path" in data):
-            path = AadmPreprocessor.get_path(data["path"])
-            uri = AadmPreprocessor.get_type(data["url"])
-            pth = '{}/{}_{}'.format(path[0],uri,path[1])
-            del data["path"]
-            del data["url"]
-            return True, key, pth
+                and "primary" in data
+                and isinstance(data["primary"], dict)):
+            path = cls.get_path(data["primary"]["path"])
+            uri = cls.get_url(data["primary"]["url"])
+            cls.ansible_urls.append(data["primary"]["url"])
+            data["primary"] = '{}/{}_{}'.format(path[0],uri,path[1])
+            cls.ansible_paths.append(data["primary"])
+            return True, key, data
         return False, key, data 
 
     #remove replace empty dictionaries with key values
@@ -187,14 +201,14 @@ class AadmPreprocessor:
     # extract type values from URLs
     @classmethod
     def reduce_type(cls, key, data):
-        short_type = cls.get_type(key)
+        short_type = cls.get_url(key)
         if short_type != key:
             return True, short_type, data
         return False, key, data
 
     #extract type out of URL
     @classmethod
-    def get_type(cls, type_str):
+    def get_url(cls, type_str):
         if re.search(cls.url_regex, type_str) is None:
             return type_str
         return type_str.split("/")[-1]
@@ -210,8 +224,8 @@ class AadmPreprocessor:
     @classmethod
     def convert_int(cls, tag):
         split_tag = tag.split(":") 
-        get_type = split_tag[-1]
-        if get_type=="str":
+        get_url = split_tag[-1]
+        if get_url=="str":
             base_tag = ":".join(split_tag[:2])
             ntag = base_tag + ":int"
         return ntag
@@ -227,8 +241,8 @@ class AadmPreprocessor:
             cls.collapse_specifications,
             cls.collapse_empty_dict,
             cls.reduce_type,
-            cls.file_list_dict,
-            cls.format_path_url,
+            cls.dep_path_url,
+            cls.pri_path_url,
             cls.convert_str
             ]
 
@@ -278,7 +292,7 @@ class AadmTransformer:
     def transform_type(data, context):
         prefix = "type" if context.section == "node_templates" or context.level != 0 else "derived_from"
         if isinstance(data, str):
-            return prefix, AadmPreprocessor.get_type(data)
+            return prefix, AadmPreprocessor.get_url(data)
         raise Exception
 
     @staticmethod
@@ -463,19 +477,19 @@ def parse_data(name, data):
     tosca = AadmTransformer.transform_aadm(preprocessed_aadm)
 
     # create an output file
-    with open(name + ".yml", 'w+') as outfile:
-        print('TOSCA generated -------')
-        return yaml.dump(tosca, outfile, Dumper=ToscaDumper)        
+    #with open(name + ".yml", 'w+') as outfile:
+        #print('TOSCA generated -------')
+        #return yaml.dump(tosca, outfile, Dumper=ToscaDumper)        
 
-    return None #ansible_urls, ansible_paths, dependency_urls, dependency_paths    
+    return AadmPreprocessor.ansible_urls, AadmPreprocessor.ansible_paths, AadmPreprocessor.dependency_urls, AadmPreprocessor.dependency_paths    
 
 #UNRELATED AUX FUNC
-def read(path):
-    return (pathlib.Path(path)).read_text()
+# def read(path):
+#     return (pathlib.Path(path)).read_text()
 
-def main():
-    json_aadm = json.loads(read("test/fixture.json"))
-    parse_data("test/fixture", json_aadm)  
+# def main():
+#     json_aadm = json.loads(read("test/fixture.json"))
+#     parse_data("test/fixture", json_aadm)  
 
-if __name__ == "__main__":
-    main()  
+# if __name__ == "__main__":
+#     main()
