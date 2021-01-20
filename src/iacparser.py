@@ -269,6 +269,10 @@ class AadmPreprocessor:
 
     @classmethod
     def preprocess_aadm(cls, aadm):
+        cls.ansible_urls = []
+        cls.ansible_paths = []
+        cls.dependency_urls = []
+        cls.dependency_paths = []
         result = {}  
         changed = True
         result = aadm.copy()
