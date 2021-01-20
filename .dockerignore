@@ -22,6 +22,5 @@ coverage.xml
 # CI/CD
 venv-test
 venv-deploy
-openstack-blueprint/modules/
-openstack-blueprint/export.sh
-openstack-blueprint/.opera
+openstack-blueprint/
+.github/
