@@ -81,7 +81,7 @@ def test_artifacts_extraction():
                  'playbooks/egi_refresh_token.yml',
                  'playbooks/config.json.tmpl'])
 
-    test = TestConfig("fixture")
+    test = TestConfig("fixture", "test/fixture.json")
 
     parsed_data = parser.parse_data(test.parser_dest(), test.fixture())
     pds = []
@@ -155,6 +155,36 @@ def test_parser_opt_job():
     assert len(content) > 0
 
     assert "#PBS -N skyline-extraction-training" in content
+    assert "#PBS -q ssd" in content
+    assert "#PBS -l nodes=1:gpus=1:ssd" in content
+    assert "#PBS -l procs=40" in content
+
+def test_parser_no_opt_job():
+
+    # this component has optimisation field
+    no_opt_component = "no-opt-batch-app"
+    # expected container for $no_opt_component
+    no_opt_expected_container_runtime = "docker://some-container"
+
+    # this component has optimisation field, but optimised container not found
+    job_script_component = "no-opt-batch-app-job-hpc"
+
+
+    test = TestConfig("no_opt_job", "test/opt_job_fixture.json")
+    parser.parse_data(test.parser_dest(), test.fixture())
+    service = test.service()
+
+    no_opt_component_template = service.get("topology_template").get("node_templates").get(no_opt_component)
+    image = no_opt_component_template.get("properties").get("container_runtime")
+
+    assert image == no_opt_expected_container_runtime
+
+    job_script_component_template = service.get("topology_template").get("node_templates").get(job_script_component)
+    content = job_script_component_template.get("properties").get("content", "")
+
+    assert len(content) > 0
+
+    assert "#PBS -N no-opt-skyline-extraction-training" in content
     assert "#PBS -q ssd" in content
     assert "#PBS -l nodes=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
