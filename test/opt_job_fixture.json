@@ -277,6 +277,170 @@
       }
     ]
   },
+  "https://www.sodalite.eu/ontologies/workspace/1/optimization/no-opt-batch-app": {
+    "type": "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.Batch.Container.Application",
+    "isNodeTemplate": true,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/app_tag": {
+          "value": "no-opt-skyline-extraction-training",
+          "label": "app_tag"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/app_type": {
+          "value": "python",
+          "label": "app_type"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/executable": {
+          "value": "python3 resnet/resnet_imagenet_main.py",
+          "label": "executable"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/arguments": {
+          "value": "--data_dir=/mnt/nfs/home/karthee/AI/data/tf_records/train/ -batch_size=96 --train_epochs=3 --train_steps=10 --use_synthetic_data=false",
+          "label": "arguments"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/container_runtime": {
+          "value": "docker://some-container",
+          "label": "container_runtime"
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/runtime": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/batch-app-runtime-hpc": {
+              "label": "batch-app-runtime-hpc"
+            },
+            "label": "runtime"
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/optimization/no-opt-batch-app-job-hpc": {
+    "type": "https://www.sodalite.eu/ontologies/workspace/1/openstack/sodalite.nodes.batch.Container.JobExecution",
+    "isNodeTemplate": true,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/job_name": {
+          "value": "no-opt-skyline-extraction-training",
+          "label": "job_name"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/wall_time_limit": {
+          "value": "12:00:00 ",
+          "label": "wall_time_limit"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/docker/node_count": {
+          "value": 1,
+          "label": "node_count"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/core_count": {
+          "value": 40,
+          "label": "core_count"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/request_gpus": {
+          "value": 1,
+          "label": "request_gpus"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/queue": {
+          "value": "ssd",
+          "label": "queue"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/standard_output_file": {
+          "value": "skyline-extraction-training.out",
+          "label": "standard_output_file"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/standard_error_file": {
+          "value": "skyline-extraction-training.err",
+          "label": "standard_error_file"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/combine_stdout_stderr": {
+          "value": true,
+          "label": "combine_stdout_stderr"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/copy_environment": {
+          "value": true,
+          "label": "copy_environment"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/request_event_notification": {
+          "value": "abe",
+          "label": "request_event_notification"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/email_address": {
+          "value": "some@email.com",
+          "label": "email_address"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/workspace": {
+          "value": "~/workflow-modak",
+          "label": "workspace"
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/application": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/no-opt-batch-app": {
+              "label": "no-opt-batch-app"
+            },
+            "label": "application"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/runtime": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/batch-app-runtime-hpc": {
+              "label": "batch-app-runtime-hpc"
+            },
+            "label": "runtime"
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/host": {
+          "value": {
+            "https://www.sodalite.eu/ontologies/workspace/1/optimization/hlrs-testbed": {
+              "label": "hlrs-testbed"
+            },
+            "label": "host"
+          }
+        }
+      }
+    ]
+  },
   "https://www.sodalite.eu/ontologies/workspace/1/optimization/topology_template_inputs_r54461fkm5092otiumijg1g4lg": {
     "inputs": [
       {

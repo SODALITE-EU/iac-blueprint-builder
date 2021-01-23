@@ -15,6 +15,8 @@ class ModakConfig:
 
     valid_container_image_properties = ["image", "image_name", "container_runtime"]
 
+    exec_node_requirements = ["application", "host", "runtime"]
+
     @classmethod
     def init(cls):
         if not cls.config:
@@ -58,7 +60,7 @@ class ModakConfig:
     @classmethod
     def get_opt_job_content(cls, app, target, job_options, opt_json_string):
         opt_json_string = opt_json_string.strip('\"')
-        opt = json.loads(opt_json_string)
+        opt = json.loads(opt_json_string) if opt_json_string else {}
         response = requests.post(
             cls.get_modak_api_job(),
             headers= { "Content-Type": "application/json" },
@@ -347,15 +349,24 @@ class AadmTransformer:
         opt_nodes = {}
         exec_nodes = {}
 
-        # extract optimization nodes
+        # extract optimization from nodes and assign empty to non-optimized
         for key, value in result["node_templates"].items():
-            if value.get("optimization"):
-                opt_nodes[key] = value.get("optimization")
-                value.pop("optimization", None)
+            opt_nodes[key] = value.get("optimization", "")
+            value.pop("optimization", None)
 
         # extract execution nodes
         for key, value in result["node_templates"].items():
             reqs = value.get("requirements", [])
+            
+            # determine an execution node from the list of requirements
+            reqs_names = [
+                req_name
+                for req in reqs 
+                for req_name in req.keys()
+            ]
+            if not all(exec_req in reqs_names for exec_req in ModakConfig.exec_node_requirements):
+                continue
+            
             for req in reqs:
                 app_req = req.get("application", "")
                 if app_req in opt_nodes:
@@ -363,6 +374,9 @@ class AadmTransformer:
 
         # modify image properties for optimization nodes
         for node, opts in opt_nodes.items():
+            if not opts:
+                continue
+
             for property in result["node_templates"][node]["properties"]:
                 if ModakConfig.is_valid_image_property(property):
                     opt_image = ModakConfig.get_opt_image(opts)
@@ -481,11 +495,11 @@ def parse_data(name, data):
     tosca = AadmTransformer.transform_aadm(preprocessed_aadm)
 
     # create an output file
-    #with open(name + ".yml", 'w+') as outfile:
-        #print('TOSCA generated -------')
-        #return yaml.dump(tosca, outfile, Dumper=ToscaDumper)        
+    with open(name + ".yml", 'w+') as outfile:
+        print('TOSCA generated -------')
+        yaml.dump(tosca, outfile, Dumper=ToscaDumper)        
 
-    return AadmPreprocessor.ansible_urls, AadmPreprocessor.ansible_paths, AadmPreprocessor.dependency_urls, AadmPreprocessor.dependency_paths    
+    return (AadmPreprocessor.ansible_urls, AadmPreprocessor.ansible_paths, AadmPreprocessor.dependency_urls, AadmPreprocessor.dependency_paths)
 
 #UNRELATED AUX FUNC
 # def read(path):
