@@ -1,5 +1,6 @@
 import json
 import yaml
+import re
 import pytest
 from pathlib import Path
 
@@ -28,6 +29,22 @@ class TestConfig:
     def service(self):
         return yaml.load(self.yaml_path().open())
 
+#return a new class TestConfig
+@pytest.fixture
+def test_fixture():
+    test = TestConfig('output_test')
+    parser.parse_data(test.parser_dest(), test.fixture())
+    return test
+
+#return loaded json
+@pytest.fixture
+def json_in(test_fixture):
+    return test_fixture.fixture()
+
+#return loaded yaml
+@pytest.fixture
+def yaml_out(test_fixture):
+    return test_fixture.service()
 
 
 def test_artifacts_extraction():
@@ -99,7 +116,107 @@ def test_artifacts_extraction():
         pds.append(parsed_data[i])
         exs.append(expected[i])
     assert exs == pds
-        
+
+#checking if the output file is sucssesful generated
+def test_output_path(test_fixture):
+    assert Path.exists(test_fixture.yaml_path()),"output yaml not found"
+
+#checking if all participants are listed in the output
+def test_node_template_participants(json_in, yaml_out):
+    node_temp = list(yaml_out.get("topology_template").get("node_templates").keys())
+    for temp in next(iter(json_in.values()))["participants"]:
+        temp = str(temp)[str(temp).rfind('/') + 1:]
+        if "topology_template_inputs" not in temp:
+            assert temp in node_temp,"Participant missing"
+
+#checking if all the node types are generated
+def test_node_types_list(json_in, yaml_out):
+    node_type = list(yaml_out.get("node_types").keys())
+    for key in list(json_in.keys()):
+        key = str(key)[str(key).rfind('/') + 1:]
+        if key.find('sodalite.nodes.') == 0:
+            assert key in node_type
+
+#checking the detail information in node_templates for fields: 
+#   type, properties, requirement
+def test_node_template_details(json_in,yaml_out):
+    node_temp = yaml_out.get("topology_template").get("node_templates")
+    node_list = list(node_temp.keys())
+    for key, value in json_in.items():
+        key = str(key)[str(key).rfind('/') + 1:]
+        if key in node_list:
+            node_out = node_temp.get(key)
+            if "type" in value.keys():
+                t = value["type"]
+                assert t[t.rfind('/')+1:] == node_out.get("type"), "type is not correct"
+            if "properties" in value.keys():
+                for pro_item in value["properties"]:
+                    for key_pro, value_pro in pro_item.items():
+                        if isinstance(value_pro, dict) and "value" in value_pro.keys() and "label" in value_pro.keys():
+                            node_pro = node_out.get("properties").get(value_pro["label"])
+                            if isinstance(node_pro, dict):
+                                key_v = re.search('{\s(.+?):', value_pro["value"]).group(1)
+                                value_v = re.search(':\s(.+?)\s}', value_pro["value"]).group(1)
+                                assert key_v in node_pro.keys() and value_v in node_pro.values(),"properties error with label and value"
+                                pass #later
+                            elif isinstance(node_pro, list):
+                                for item in node_pro:
+                                    assert item in value_pro["value"], "properties error with label and value"
+                            else:
+                                assert node_pro == value_pro["value"], "properties error with label and value"
+            if "requirements" in value.keys():
+                node_req = node_out.get("requirements")
+                for req_index in range(0, len(value["requirements"])):
+                    for key_req, value_req in value["requirements"][req_index].items():
+                        if "value" in value_req.keys():
+                            sub_value_req = value_req["value"]
+                            for key_sub, value_sub in sub_value_req.items():
+                                if "https://" in key_sub and (isinstance(value_sub, dict) and "label" in value_sub.keys()):
+                                    print(node_req)
+                                    assert node_req[req_index].get(sub_value_req["label"]) == value_sub["label"] ,"requirement error with label and value"
+
+@pytest.mark.skip(reason="Inputs still needs to be implemented")
+#checking topology template inputs
+def test_topology_template_inputs(json_in,yaml_out):
+    inputs_out = yaml_out.get("topology_template").get("inputs")
+    inputs_in = []
+    for key, value in json_in.items():
+        if "topology_template_inputs" in key:
+            inputs_in = value["inputs"]
+    for element in inputs_in:
+        for key, value in element.items():
+            if "https://" in key: 
+                key = key[key.rfind('/')+1:]
+                assert inputs_out.get(key).get("type") == value["specification"]["type"], "input type not correct"
+
+#checking node types details for: 
+#   type/derived_from, properties(description, required, type)
+def test_node_types_detail(json_in, yaml_out):
+    node_type = yaml_out.get("node_types")
+    for key, value in json_in.items():
+        key = str(key)[str(key).rfind('/') + 1:]
+        if key.find('sodalite.nodes.') == 0:
+            node = node_type.get(key)
+            if "type" in value.keys() and "https://" in value["type"]: 
+                type_in = remove_link(value["type"])
+                assert node.get("derived_from") == type_in, "node type derived_from error"
+            if "properties" in value.keys():
+                node_pro = node.get("properties")
+                for element in value["properties"]:
+                    for key_pro, value_pro in element.items():
+                        key_pro = remove_link(key_pro)
+                        if "description" in value_pro.keys():
+                            assert node_pro.get(key_pro).get("description") == value_pro["description"], "node type properties decription error"
+                        if "specifications" in value_pro.keys():
+                            value_spec = value_pro.values()
+                            if "required" in value_spec.keys():
+                                assert node_pro.get(key_pro).get("required") == value_spec["required"], "properties required error"
+                            if "type" in value_spec.keys():
+                                for key_type, value_type in value_spec["type"].items():
+                                    assert node_pro.get(key_pro).get("type") == value_type["label"], "properties type error"
+
+def remove_link(link):
+    return link[link.rfind('/')+1:]        
 
 def test_parser_opt():
 
@@ -127,7 +244,6 @@ def test_parser_opt():
     image_name = opt_not_found_component_template.get("properties").get("image_name")
 
     assert image_name == opt_not_found_expected_container_runtime
-
 
 def test_parser_opt_job():
 
@@ -188,3 +304,4 @@ def test_parser_no_opt_job():
     assert "#PBS -q ssd" in content
     assert "#PBS -l nodes=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
+
