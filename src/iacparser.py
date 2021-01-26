@@ -416,27 +416,34 @@ class AadmTransformer:
         result = {
              "tosca_definitions_version": "tosca_simple_yaml_1_3",
              "node_types": {},
-             "node_templates": {}
+             "node_templates": {},
+             "input": {}
              }
 
         for key, value in aadm.items():
-            if "isNodeTemplate" not in value:
-                continue
+            
+            if "topology_template_inputs" in key:                
+                section = "input"
+                value = value["inputs"]
+                top_key = AadmPreprocessor.get_url(key)
 
-            if value["isNodeTemplate"]:
-                section = "node_templates"
-            else:
-                if "sodalite.datatypes" in key:
-                    if "data_types" not in result:
-                        result["data_types"] = {}
-                    section = "data_types"
-
-                elif "sodalite.relationships" in key:
-                    if "relationship_types" not in result:
-                        result["relationship_types"] = {}
-                    section = "relationship_types"
+            elif "isNodeTemplate" in value:
+                if value["isNodeTemplate"]:
+                    section = "node_templates"
                 else:
-                    section = "node_types"
+                    if "sodalite.datatypes" in key:
+                        if "data_types" not in result:
+                            result["data_types"] = {}
+                        section = "data_types"
+
+                    elif "sodalite.relationships" in key:
+                        if "relationship_types" not in result:
+                            result["relationship_types"] = {}
+                        section = "relationship_types"
+                    else:
+                        section = "node_types"          
+            else:
+                continue
 
             context = Context(section, 0)
             key = cls.transform_type(key, context)[1]
@@ -446,7 +453,9 @@ class AadmTransformer:
 
         result["topology_template"] = {}
         result["topology_template"]["node_templates"] = result["node_templates"]
+        result["topology_template"]["input"] = result["input"][top_key]
         del result["node_templates"]
+        del result["input"]
         return result
 
 class ToscaDumper(yaml.SafeDumper):
@@ -501,13 +510,16 @@ def parse_data(name, data):
 
     return (AadmPreprocessor.ansible_urls, AadmPreprocessor.ansible_paths, AadmPreprocessor.dependency_urls, AadmPreprocessor.dependency_paths)
 
+'''
 #UNRELATED AUX FUNC
-# def read(path):
-#     return (pathlib.Path(path)).read_text()
+def read(path):
+    return (pathlib.Path(path)).read_text()
 
-# def main():
-#     json_aadm = json.loads(read("test/fixture.json"))
-#     parse_data("test/fixture", json_aadm)  
+def main():
+    json_aadm = json.loads(read("test/fixture.json"))
+    parse_data("test/outputs/fixt", json_aadm)  
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
+
+'''    
