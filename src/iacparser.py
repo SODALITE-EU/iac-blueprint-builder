@@ -308,7 +308,10 @@ class AadmTransformer:
             if "entity" in data:
                 result.append(data["entity"])
             if "req_cap" in data:
-                result.append(data["req_cap"])
+                if isinstance(data["req_cap"], list):
+                    result.append(data["req_cap"][0])
+                else:    
+                    result.append(data["req_cap"])
             if "property" in data:
                 result.append(data["property"])
             if "attribute" in data:
