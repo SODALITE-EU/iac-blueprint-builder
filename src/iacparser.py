@@ -455,8 +455,8 @@ class AadmTransformer:
         cls.transform_optimization(result)
 
         result["topology_template"] = {}
-        result["topology_template"]["node_templates"] = result["node_templates"]
-        result["topology_template"]["input"] = result["input"][top_key]
+        result["topology_template"]["inputs"] = result["input"][top_key]
+        result["topology_template"]["node_templates"] = result["node_templates"]        
         del result["node_templates"]
         del result["input"]
         return result
@@ -469,29 +469,33 @@ class ToscaDumper(yaml.SafeDumper):
                  encoding=None, explicit_start=None, explicit_end=None,
                  version=None, tags=None, sort_keys=False):
         super().__init__(stream, default_flow_style=False, sort_keys=False)
+        self.line_break_indent = 2
 
     def write_line_break(self, data=None):
         super().write_line_break(data)
 
-        if len(self.indents) <= 2:
+        if len(self.indents) <= self.line_break_indent:
             super().write_line_break()
 
     def serialize_node(self, node, parent, index, flow_style=False):
+        if isinstance(index, ScalarNode) and index.value == "node_templates":
+            self.line_break_indent = 3
 
         # output inputs in json-like format
         if isinstance(index, ScalarNode) and index.value == "inputs":
             for key, value in node.value:
                 if isinstance(value, CollectionNode):
                     value.flow_style = True
-        
+
         # output inputs in json-like format
         if (isinstance(index, ScalarNode)
                 and index.value in ["properties", "attributes"]):
             for key, value in node.value:
                 if (isinstance(value, MappingNode)
-                        and "get_input" in str(value.value)):
+                        and ("get_input" in str(value.value)
+                             or "get_attribute" in str(value.value)
+                             or "get_property" in str(value.value))):
                     value.flow_style = True    
-
         if (isinstance(node, SequenceNode)
                 and isinstance(index, ScalarNode)
                 and index.value == "occurrences"):
