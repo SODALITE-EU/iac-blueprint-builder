@@ -175,10 +175,9 @@ def test_node_template_details(json_in,yaml_out):
                                     print(node_req)
                                     assert node_req[req_index].get(sub_value_req["label"]) == value_sub["label"] ,"requirement error with label and value"
 
-@pytest.mark.skip(reason="Inputs still needs to be implemented")
 #checking topology template inputs
 def test_topology_template_inputs(json_in,yaml_out):
-    inputs_out = yaml_out.get("topology_template").get("inputs")
+    inputs_out = yaml_out.get("topology_template").get("input")
     inputs_in = []
     for key, value in json_in.items():
         if "topology_template_inputs" in key:
@@ -217,6 +216,7 @@ def test_node_types_detail(json_in, yaml_out):
 
 def remove_link(link):
     return link[link.rfind('/')+1:]        
+
 
 def test_parser_opt():
 

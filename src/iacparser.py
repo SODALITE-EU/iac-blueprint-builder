@@ -92,7 +92,7 @@ class AadmPreprocessor:
     # regex to check if string is URL
     url_regex = r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"
     # list of keys to convert
-    convert_list_dict = ["properties", "attributes", "interfaces", "capabilities"]
+    convert_list_dict = ["properties", "attributes", "interfaces", "capabilities", "inputs"]
 
     #path and urls
     ansible_urls = []
