@@ -43,7 +43,7 @@ print("starting with XOPERA endpoint:", XOPERA_API)
 @app.route('/parse', methods=['POST'])
 def parse():
     body = request.get_json()
-    workpath = '%s-%d' % (body["name"], uuid.uuid1())
+    workpath = '%s-%d' % (body["name"], int(uuid.uuid1()))
     if not os.path.exists(workpath):
         os.makedirs(workpath)
     outpath = os.path.join(workpath, body["name"])
