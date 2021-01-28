@@ -238,11 +238,13 @@ def test_parser_opt():
     opt_component_template = service.get("topology_template").get("node_templates").get(opt_component)
     image_name = opt_component_template.get("properties").get("image_name")
 
+    assert not "optimization" in opt_component_template
     assert image_name == opt_expected_container_runtime
 
     opt_not_found_component_template = service.get("topology_template").get("node_templates").get(opt_not_found_component)
     image_name = opt_not_found_component_template.get("properties").get("image_name")
 
+    assert not "optimization" in opt_not_found_component_template
     assert image_name == opt_not_found_expected_container_runtime
 
 def test_parser_opt_job():
@@ -263,6 +265,7 @@ def test_parser_opt_job():
     opt_component_template = service.get("topology_template").get("node_templates").get(opt_component)
     image = opt_component_template.get("properties").get("container_runtime")
 
+    assert not "optimization" in opt_component_template
     assert image == opt_expected_container_runtime
 
     job_script_component_template = service.get("topology_template").get("node_templates").get(job_script_component)
@@ -293,6 +296,7 @@ def test_parser_no_opt_job():
     no_opt_component_template = service.get("topology_template").get("node_templates").get(no_opt_component)
     image = no_opt_component_template.get("properties").get("container_runtime")
 
+    assert not "optimization" in no_opt_component_template
     assert image == no_opt_expected_container_runtime
 
     job_script_component_template = service.get("topology_template").get("node_templates").get(job_script_component)
