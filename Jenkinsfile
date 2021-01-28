@@ -9,6 +9,26 @@ agent { label 'docker-slave' }
                 checkout scm
             }
         }
+        stage('test iac-blueprint-builder') {
+                steps {
+                    sh  """ #!/bin/bash 
+                            pip3 install -r requirements.txt
+                            pip3 install -e .
+                            python3 -m pytest --pyargs -s ${WORKSPACE}/test --junitxml="results.xml" --cov=src --cov-report xml test/
+                        """
+                    junit 'results.xml'
+                }
+        }
+        stage('SonarQube analysis'){
+                environment {
+                scannerHome = tool 'SonarQubeScanner'
+                }
+                steps {
+                    withSonarQubeEnv('SonarCloud') {
+                            sh "${scannerHome}/bin/sonar-scanner"
+                    }
+                }
+        }
         stage('build and push docker image') {
                 steps {
                     sh "docker build -t iac-blueprint-builder ."
@@ -28,26 +48,6 @@ agent { label 'docker-slave' }
                                 docker push sodaliteh2020/iac-blueprint-builder:${BUILD_NUMBER}
                                 docker push sodaliteh2020/iac-blueprint-builder
                             """
-                    }
-                }
-        }
-        stage('test iac-blueprint-builder') {
-                steps {
-                    sh  """ #!/bin/bash 
-                            pip3 install -r requirements.txt
-                            pip3 install -e .
-                            python3 -m pytest --pyargs -s ${WORKSPACE}/test --junitxml="results.xml" --cov=src --cov-report xml test/
-                        """
-                    junit 'results.xml'
-                }
-        }
-        stage('SonarQube analysis'){
-                environment {
-                scannerHome = tool 'SonarQubeScanner'
-                }
-                steps {
-                    withSonarQubeEnv('SonarCloud') {
-                            sh "${scannerHome}/bin/sonar-scanner"
                     }
                 }
         }

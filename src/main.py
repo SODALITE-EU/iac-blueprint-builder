@@ -4,6 +4,7 @@ import uuid
 
 import requests
 from flask import Flask, request
+from flask_wtf.csrf import CSRFProtect
 from flask_swagger_ui import get_swaggerui_blueprint
 
 import src
@@ -13,8 +14,9 @@ API_URL = '/static/swagger.json'
 XOPERA_ENDPOINT_KEY = 'XOPERA_ENDPOINT'
 XOPERA_ENDPOINT_DEFAULT = 'https://154.48.185.209'
 CONFIG_PATH = 'config.json'
-
+csrf = CSRFProtect()
 app = Flask(__name__)
+csrf.init_app(app)
 
 SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     SWAGGER_URL,
