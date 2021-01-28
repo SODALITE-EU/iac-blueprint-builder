@@ -1,5 +1,5 @@
 # iac-blueprint-builder
-
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SODALITE-EU_iac-blueprint-builder&metric=alert_status)](https://sonarcloud.io/dashboard?id=SODALITE-EU_iac-blueprint-builder)
 This component creates a IaC blueprint based on model instance representation from SODALITE KB. It is called and used by xopera.
 
 ## swagger
