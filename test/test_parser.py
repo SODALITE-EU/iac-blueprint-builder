@@ -177,7 +177,7 @@ def test_node_template_details(json_in,yaml_out):
 
 #checking topology template inputs
 def test_topology_template_inputs(json_in,yaml_out):
-    inputs_out = yaml_out.get("topology_template").get("input")
+    inputs_out = yaml_out.get("topology_template").get("inputs")
     inputs_in = []
     for key, value in json_in.items():
         if "topology_template_inputs" in key:
