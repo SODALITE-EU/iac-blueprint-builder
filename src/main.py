@@ -58,7 +58,7 @@ def parse():
     os.system('python3 src/blueprint2CSAR.py %s %s --entry-definitions %s.yml --output %s' %
               (body["name"], outpath[:outpath.rfind('/')], body["name"], outpath))
     files = [('CSAR', open('%s.zip' % (outpath,), 'rb'))]
-    response = requests.post(XOPERA_API, files=files, verify=False)
+    response = requests.post(XOPERA_API, files=files, verify=True)
     return json.loads(response.text)
 
 
