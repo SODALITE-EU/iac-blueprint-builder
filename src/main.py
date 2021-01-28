@@ -43,7 +43,7 @@ print("starting with XOPERA endpoint:", XOPERA_API)
 @app.route('/parse', methods=['POST'])
 def parse():
     body = request.get_json()
-    workpath = '%s-%d' % (body["name"], uuid.uuid1())
+    workpath = '%s-%d' % (body["name"], int(uuid.uuid1()))
     if not os.path.exists(workpath):
         os.makedirs(workpath)
     outpath = os.path.join(workpath, body["name"])
@@ -58,7 +58,7 @@ def parse():
     os.system('python3 src/blueprint2CSAR.py %s %s --entry-definitions %s.yml --output %s' %
               (body["name"], outpath[:outpath.rfind('/')], body["name"], outpath))
     files = [('CSAR', open('%s.zip' % (outpath,), 'rb'))]
-    response = requests.post(XOPERA_API, files=files, verify=False)
+    response = requests.post(XOPERA_API, files=files, verify=True)
     return json.loads(response.text)
 
 
