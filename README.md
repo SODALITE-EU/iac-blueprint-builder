@@ -12,7 +12,7 @@ If installed locally with docker it is accessible from http://localhost:8080/doc
 The triggering command is:
 
 ```
-curl --location --request POST 'localhot:8080/parse' \
+curl --location --request POST 'localhost:8080/parse' \
 --header 'Content-Type: application/json' \
 --data-raw '{
 	"name" : "test2",
