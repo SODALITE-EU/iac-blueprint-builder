@@ -2,6 +2,13 @@
 # Created by https://www.gitignore.io/api/macos,python
 # Edit at https://www.gitignore.io/?templates=macos,python
 
+# CI/CD
+venv-test
+venv-deploy
+openstack-blueprint/modules/
+openstack-blueprint/export.sh
+openstack-blueprint/.opera
+
 ### macOS ###
 # General
 .DS_Store
@@ -78,6 +85,7 @@ htmlcov/
 .coverage.*
 .cache
 nosetests.xml
+results.xml
 coverage.xml
 *.cover
 .hypothesis/

@@ -1,0 +1,14 @@
+# OPENSTACK SETTINGS
+ssh-key-name: ${ssh_key_name}
+image-name: ${image_name}
+vm-name: ${vm_name}
+openstack-network-name: ${network_name}
+flavor-name: ${flavor_name}
+ssh_config:
+  IdentityFile:  ${xOpera_ssh_key_file}
+# DOCKER SETTINGS
+docker-network: ${docker_network}
+docker-public-registry-url: ${docker_public_registry_url}
+# IAC_BLUEPRINT_BUILDER SETTINGS
+iac-blueprint-builder_env:
+  XOPERA_ENDPOINT: ${xopera_endpoint}

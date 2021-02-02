@@ -1,0 +1,14 @@
+# OPENSTACK SETTINGS
+ssh-key-name: [key_name]
+image-name: centos7
+vm-name: iac-blueprint-builder-test
+openstack-network-name: orchestrator-network
+flavor-name: m1.medium
+ssh_config:
+  IdentityFile:  [path to ssh key]
+# DOCKER SETTINGS
+docker-network: network
+docker-public-registry-url: registry.hub.docker.com
+# IAC_BLUEPRINT_BUILDER SETTINGS
+iac-blueprint-builder_env:
+  XOPERA_ENDPOINT: http://ip:5000/

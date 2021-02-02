@@ -1,0 +1,159 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+imports:
+  - modules/openstack/openstack_vm.yaml
+  - modules/docker/docker_host.yaml
+  - modules/docker/docker_network.yaml
+  - modules/docker/docker_registry.yaml
+  - modules/docker/docker_component.yaml
+
+topology_template:
+
+  inputs:
+    ssh-key-name:  
+      type: string 
+    vm-name:
+      type: string
+    image-name:
+      type: string
+    openstack-network-name:  
+      type: string
+    flavor-name:  
+      type: string
+    ssh_config:
+      type: map
+    docker-network: 
+      type: string
+    docker-public-registry-url: 
+      type: string
+    iac-blueprint-builder_env:
+      type: map
+
+  node_templates:
+    security-rules-remote-access:
+      type: sodalite.nodes.OpenStack.SecurityRules
+      properties:
+        ports:
+          SSH:
+            port_range_min: 20
+            port_range_max: 22
+            remote_ip_prefix: 0.0.0.0/0
+            protocol: tcp
+        group_name: sodalite-remote-access
+        group_description: Sodalite SSH group
+
+
+    security-rules-sodalite:  
+      type: sodalite.nodes.OpenStack.SecurityRules 
+      properties:  
+        ports:
+          traefik:
+            port_range_min: 8888
+            port_range_max: 8888
+            remote_ip_prefix: 0.0.0.0/0
+            protocol: tcp
+          prometheus:
+            port_range_min: 9090
+            port_range_max: 9093
+            remote_ip_prefix: 0.0.0.0/0
+            protocol: tcp
+          prometheus_skydive_connector:
+            port_range_min: 9101
+            port_range_max: 9101
+            remote_ip_prefix: 0.0.0.0/0
+            protocol: tcp
+          consul_1:
+            port_range_min: 8500
+            port_range_max: 8500
+            remote_ip_prefix: 0.0.0.0/0
+            protocol: tcp
+          consul_2:
+            port_range_min: 8600
+            port_range_max: 8600
+            remote_ip_prefix: 0.0.0.0/0
+            protocol: tcp
+          component_ports:  
+            port_range_max: 8088
+            remote_ip_prefix: 0.0.0.0/0 
+            port_range_min: 8080 
+            protocol: tcp 
+          http_port:  
+            port_range_min: 80 
+            port_range_max: 80 
+            protocol: tcp 
+            remote_ip_prefix: 0.0.0.0/0 
+          5000_ports:  
+            port_range_min: 5000
+            port_range_max: 5007
+            protocol: tcp 
+            remote_ip_prefix: 0.0.0.0/0
+          https_port:
+            port_range_min: 443
+            port_range_max: 444
+            protocol: tcp
+            remote_ip_prefix: 0.0.0.0/0
+          postgres_port:
+            port_range_min: 5432
+            port_range_max: 5432
+            protocol: tcp
+            remote_ip_prefix: 0.0.0.0/0
+          graph_db_port:
+            port_range_min: 7200
+            port_range_max: 7200
+            protocol: tcp
+            remote_ip_prefix: 0.0.0.0/0
+        group_name:  sodalite-uc 
+        group_description:  Sodalite UC security group     
+
+    blueprint-builder-vm:
+      type: sodalite.nodes.OpenStack.VM 
+      properties:  
+        name:             { get_input: vm-name }
+        key_name:         { get_input: ssh-key-name } 
+        image:            { get_input: image-name }
+        network:          { get_input: openstack-network-name } 
+        security_groups:  sodalite-remote-access,sodalite-uc
+        flavor:           { get_input: flavor-name }
+        ssh_config:       { get_input: ssh_config }
+        username: centos
+      requirements:  
+        - protected_by: security-rules-sodalite 
+        - protected_by: security-rules-remote-access
+
+    docker-host:
+      type: sodalite.nodes.DockerHost
+      requirements:
+        - host: blueprint-builder-vm
+
+    docker-network:
+      type: sodalite.nodes.DockerNetwork
+      properties:  
+        name: { get_input: docker-network }
+      requirements:
+        - host: blueprint-builder-vm
+        - dependency: docker-host    
+        
+    docker-public-registry:
+      type: sodalite.nodes.DockerRegistry
+      properties:  
+        docker_registry_url: { get_input: docker-public-registry-url } 
+      requirements:
+        - host: blueprint-builder-vm
+        - dependency: docker-host
+
+    # iac-blueprint-builder 
+    # https://github.com/SODALITE-EU/iac-blueprint-builder 
+    iac-blueprint-builder:
+      type: sodalite.nodes.DockerizedComponent
+      properties:
+        alias: iac-builder
+        image_name: sodaliteh2020/iac-blueprint-builder
+        docker_network_name:  { get_property: [ SELF, network, name ] }
+        restart_policy: always
+        ports:
+          - "8081:80"
+        env: { get_input: iac-blueprint-builder_env}
+      requirements:
+        - host: docker-host
+        - registry: docker-public-registry 
+        - network: docker-network
