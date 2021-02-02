@@ -7,8 +7,7 @@ import requests
 from flask import Flask, request
 from flask_wtf.csrf import CSRFProtect
 from flask_swagger_ui import get_swaggerui_blueprint
-
-import src
+from .iacparser import parse_data
 
 class XoperaConfig:
 
@@ -17,8 +16,11 @@ class XoperaConfig:
 
     @classmethod
     def init(cls):
-        if not cls.config:
-            cls.config = json.load(cls.config_path.open())
+        if cls.config is None:
+            try:
+                cls.config = json.load(cls.config_path.open())
+            except:
+                cls.config = {}    
 
     @classmethod
     def get_xopera_endpoint(cls):
@@ -56,7 +58,9 @@ csrf.init_app(app)
 SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     XoperaConfig.get_xopera_swagger_url(),
     XoperaConfig.get_xopera_api_url(),
-    XoperaConfig.get_app_name(),
+    config={
+        'app_name': XoperaConfig.get_app_name()
+    }
 )
 app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=XoperaConfig.get_xopera_swagger_url())
 
@@ -69,7 +73,7 @@ def parse():
     if not os.path.exists(workpath):
         os.makedirs(workpath)
     outpath = os.path.join(workpath, body["name"])
-    ansible_tuple = src.iacparser.parse_data(outpath, body["data"])
+    ansible_tuple = parse_data(outpath, body["data"])
     print('Downloading Ansible files ---------')
     download_dependencies(ansible_tuple[0], ansible_tuple[1], workpath)
     print('Ansible files done ------- ')
