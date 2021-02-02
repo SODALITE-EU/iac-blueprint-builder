@@ -1,66 +1,311 @@
-# import unittest
-# target = __import__("src")
 import json
-from src import parse
+import yaml
+import re
+import pytest
+from pathlib import Path
+
+import src.iacparser as parser
 
 
-def test_parser():
+class TestConfig:
+
+    YAML_SUFFIX = ".yml"
+    OUTPUTS = Path("test/outputs")
+    FIXTURE = "test/fixture.json"
+
+    def __init__(self, test_name, fixture_json=None):
+        self.test_path = self.OUTPUTS / test_name
+        self.fixture_path = Path(fixture_json) if fixture_json else Path(self.FIXTURE)
+
+    def fixture(self):
+        return json.load(self.fixture_path.open())
+
+    def parser_dest(self):
+        return str(self.test_path)
+
+    def yaml_path(self):
+        return self.test_path.with_suffix(self.YAML_SUFFIX)
+
+    def service(self):
+        return yaml.load(self.yaml_path().open())
+
+#return a new class TestConfig
+@pytest.fixture
+def test_fixture():
+    test = TestConfig('output_test')
+    parser.parse_data(test.parser_dest(), test.fixture())
+    return test
+
+#return loaded json
+@pytest.fixture
+def json_in(test_fixture):
+    return test_fixture.fixture()
+
+#return loaded yaml
+@pytest.fixture
+def yaml_out(test_fixture):
+    return test_fixture.service()
+
+
+def test_artifacts_extraction():
     # expected ansible_files, expected ansible_paths, expected dependency_files, expected dependency_paths
-    expected = (['http://160.40.52.200:8084/Ansibles/97d6afb6-7ed5-4400-af71-f1e6afc9bef5',
-                 'http://160.40.52.200:8084/Ansibles/8472698e-044e-470b-9805-7bc5046f3146',
-                 'http://160.40.52.200:8084/Ansibles/e0a2fe8a-b902-4a05-ab00-8638b4308705',
-                 'http://160.40.52.200:8084/Ansibles/ffdf5083-a0b3-48e4-9891-8237d259e4e3',
-                 'http://160.40.52.200:8084/Ansibles/4728fc1a-6c69-483e-a85c-a768ef7b5c4f',
-                 'http://160.40.52.200:8084/Ansibles/1ef463c3-ea3e-4e2d-9ed0-f0e9c3d2bf4f',
-                 'http://160.40.52.200:8084/Ansibles/76d494af-219b-492e-b263-886a42414399',
-                 'http://160.40.52.200:8084/Ansibles/b9a151d2-e838-4ff4-94b8-1083e2984d7a',
-                 'http://160.40.52.200:8084/Ansibles/35d91cc4-f4f0-44f2-af2d-080607a18456',
-                 'http://160.40.52.200:8084/Ansibles/013923c7-4f85-42f9-9a7a-800a5c9af1dd',
-                 'http://160.40.52.200:8084/Ansibles/9c0a5a59-ea21-4674-b29a-cccb3eb8c2a5',
-                 'http://160.40.52.200:8084/Ansibles/d0ee2abc-ec33-43f8-bf43-7164753394e0',
-                 'http://160.40.52.200:8084/Ansibles/3749fe0a-c9c3-4107-9eee-6f0fd75a4dcf',
-                 'http://160.40.52.200:8084/Ansibles/b1953769-a682-4acc-93f0-a1cd6e92dded',
-                 'http://160.40.52.200:8084/Ansibles/afcc8b50-3807-49ab-97f4-e2b38a966acb',
-                 'http://160.40.52.200:8084/Ansibles/9cb93c9d-aa87-4188-8b72-14934b25bee8',
-                 'http://160.40.52.200:8084/Ansibles/5a924a8d-16a1-4263-b620-5334a2c10514'],
+    expected = (['http://160.40.52.200:8084/Ansibles/ddce9b4f-7eef-46b9-b3d6-80f58eb5bb84', 
+                'http://160.40.52.200:8084/Ansibles/3b95de8b-4815-4f00-9ee4-cedf49df4afb', 
+                'http://160.40.52.200:8084/Ansibles/b8812f8a-7e1d-4acb-9258-45a5bdb45af2', 
+                'http://160.40.52.200:8084/Ansibles/454ab4e5-43f2-479a-b31a-619596e0a696', 
+                'http://160.40.52.200:8084/Ansibles/0ed0c21b-5614-48cf-82bc-cf7db4369f5b', 
+                'http://160.40.52.200:8084/Ansibles/85767023-d35f-49bc-90c0-e79fe21351eb', 
+                'http://160.40.52.200:8084/Ansibles/2a1e0e73-bcb8-4e6c-9c0d-0580cc5495b5', 
+                'http://160.40.52.200:8084/Ansibles/85578876-343f-4e5b-ba1e-b1abfab8f6d3', 
+                'http://160.40.52.200:8084/Ansibles/4250caa5-0a7d-42c1-98ae-92bb3d0dc82f', 
+                'http://160.40.52.200:8084/Ansibles/7d35630c-fd17-45d6-9ccd-3c373ee0ee91', 
+                'http://160.40.52.200:8084/Ansibles/15dbb35b-d70f-4458-a7c2-47fd39240fee', 
+                'http://160.40.52.200:8084/Ansibles/d1e603eb-1261-4d73-90b9-683d3fd7d301', 
+                'http://160.40.52.200:8084/Ansibles/67830dce-dabd-447f-81ab-9d2b57615331', 
+                'http://160.40.52.200:8084/Ansibles/55f5be63-2220-4e62-9b6d-c15b69f82e9e', 
+                'http://160.40.52.200:8084/Ansibles/88943b50-fdd9-4d5e-b72a-5fca96baaf27', 
+                'http://160.40.52.200:8084/Ansibles/31f26aa0-cb6a-446c-b6c2-9c5e846b10e4', 
+                'http://160.40.52.200:8084/Ansibles/0fc36efb-5153-49d5-9074-ed7fc66b88a4'],
 
-                ['playbooks/97d6afb6-7ed5-4400-af71-f1e6afc9bef5_add_volume.yml',
-                 'playbooks/8472698e-044e-470b-9805-7bc5046f3146_remove_volume.yml',
-                 'playbooks/e0a2fe8a-b902-4a05-ab00-8638b4308705_add_container.yml',
-                 'playbooks/ffdf5083-a0b3-48e4-9891-8237d259e4e3_remove_container.yml',
-                 'playbooks/4728fc1a-6c69-483e-a85c-a768ef7b5c4f_create_docker_host.yml',
-                 'playbooks/1ef463c3-ea3e-4e2d-9ed0-f0e9c3d2bf4f_delete_docker_host.yml',
-                 'playbooks/76d494af-219b-492e-b263-886a42414399_vm_create.yml',
-                 'playbooks/b9a151d2-e838-4ff4-94b8-1083e2984d7a_vm_delete.yml',
-                 'playbooks/35d91cc4-f4f0-44f2-af2d-080607a18456_login_user.yml',
-                 'playbooks/013923c7-4f85-42f9-9a7a-800a5c9af1dd_logout_user.yml',
-                 'playbooks/9c0a5a59-ea21-4674-b29a-cccb3eb8c2a5_security_rule_create.yml',
-                 'playbooks/d0ee2abc-ec33-43f8-bf43-7164753394e0_security_rule_delete.yml',
-                 'playbooks/3749fe0a-c9c3-4107-9eee-6f0fd75a4dcf_add_cert.yml',
-                 'playbooks/b1953769-a682-4acc-93f0-a1cd6e92dded_remove_cert.yml',
-                 'playbooks/afcc8b50-3807-49ab-97f4-e2b38a966acb_configure_demo.yml',
-                 'playbooks/9cb93c9d-aa87-4188-8b72-14934b25bee8_add_network.yml',
-                 'playbooks/5a924a8d-16a1-4263-b620-5334a2c10514_remove_network.yml'],
+                ['playbooks/ddce9b4f-7eef-46b9-b3d6-80f58eb5bb84_remove_network.yml', 
+                'playbooks/3b95de8b-4815-4f00-9ee4-cedf49df4afb_add_network.yml', 
+                'playbooks/b8812f8a-7e1d-4acb-9258-45a5bdb45af2_remove_container.yml', 
+                'playbooks/454ab4e5-43f2-479a-b31a-619596e0a696_add_container.yml', 
+                'playbooks/0ed0c21b-5614-48cf-82bc-cf7db4369f5b_remove_cert.yml', 
+                'playbooks/85767023-d35f-49bc-90c0-e79fe21351eb_remove_volume.yml', 
+                'playbooks/2a1e0e73-bcb8-4e6c-9c0d-0580cc5495b5_add_volume.yml', 
+                'playbooks/85578876-343f-4e5b-ba1e-b1abfab8f6d3_create_docker_host.yml', 
+                'playbooks/4250caa5-0a7d-42c1-98ae-92bb3d0dc82f_delete_docker_host.yml', 
+                'playbooks/7d35630c-fd17-45d6-9ccd-3c373ee0ee91_login_user.yml', 
+                'playbooks/15dbb35b-d70f-4458-a7c2-47fd39240fee_logout_user.yml', 
+                'playbooks/d1e603eb-1261-4d73-90b9-683d3fd7d301_add_cert.yml', 
+                'playbooks/67830dce-dabd-447f-81ab-9d2b57615331_security_rule_delete.yml', 
+                'playbooks/55f5be63-2220-4e62-9b6d-c15b69f82e9e_security_rule_create.yml', 
+                'playbooks/88943b50-fdd9-4d5e-b72a-5fca96baaf27_vm_create.yml', 
+                'playbooks/31f26aa0-cb6a-446c-b6c2-9c5e846b10e4_vm_delete.yml', 
+                'playbooks/0fc36efb-5153-49d5-9074-ed7fc66b88a4_configure_demo.yml'],
 
-                ['http://160.40.52.200:8084/Ansibles/ecc0d4dd-f559-4ce7-b0eb-c72992362326',
-                 'http://160.40.52.200:8084/Ansibles/8960e765-1f31-4bf2-a3cf-aadf7a96c5af',
-                 'http://160.40.52.200:8084/Ansibles/f8b77694-50d3-4491-ad2c-570d66936562',
-                 'http://160.40.52.200:8084/Ansibles/9082492d-a625-4ce7-8b12-9388db367d3a',
-                 'http://160.40.52.200:8084/Ansibles/76c43a80-16a4-48bf-b08e-036dc72a864b',
-                 'http://160.40.52.200:8084/Ansibles/8499031d-0281-414f-b608-938833f4f0d1',
-                 'http://160.40.52.200:8084/Ansibles/b8ddac49-6c25-4815-b6e1-2029590f1fd6'],
+                ['http://160.40.52.200:8084/Ansibles/fde69a72-7375-4fef-adc7-e941cb985eec', 
+                'http://160.40.52.200:8084/Ansibles/d6f34eaa-25cf-40fb-a31a-da244c0c9d37', 
+                'http://160.40.52.200:8084/Ansibles/b8ad4903-01db-4433-8eaa-cbff67edee9b', 
+                'http://160.40.52.200:8084/Ansibles/4ba88e9d-2f5a-43b7-b658-3ff59fe5c3cc', 
+                'http://160.40.52.200:8084/Ansibles/c91b757e-2cb5-4596-b80f-bdbea6fb4ccd', 
+                'http://160.40.52.200:8084/Ansibles/30c3abbe-7718-433e-bf3b-dab3093d690d', 
+                'http://160.40.52.200:8084/Ansibles/2dd0cacf-014c-4c08-a211-d222e41d3c21'],
 
-                ['artifacts/egi_refresh_token.yml',
-                 'artifacts/ca.key',
+                ['artifacts/ca.key',
                  'artifacts/ca.crt',
-                 'artifacts/config.json.tmpl'])
+                 'playbooks/egi_refresh_token.yml',
+                 'playbooks/config.json.tmpl'])
 
-    with open('test/fixture.json') as f:
-        t = json.load(f)
-        parsed_data = parse(t)
-        pds = []
-        exs = []
-        for i in range(0, 3):
-            pds.append(set(parsed_data[i]))
-            exs.append(set(expected[i]))
-        assert exs == pds
+    test = TestConfig("fixture", "test/fixture.json")
+
+    parsed_data = parser.parse_data(test.parser_dest(), test.fixture())
+    pds = []
+    exs = []
+    for i in range(0, 3):
+        pds.append(parsed_data[i])
+        exs.append(expected[i])
+    assert exs == pds
+
+    # check values reset
+    parsed_data = parser.parse_data(test.parser_dest(), test.fixture())
+    pds = []
+    exs = []
+    for i in range(0, 3):
+        pds.append(parsed_data[i])
+        exs.append(expected[i])
+    assert exs == pds
+
+#checking if the output file is sucssesful generated
+def test_output_path(test_fixture):
+    assert Path.exists(test_fixture.yaml_path()),"output yaml not found"
+
+#checking if all participants are listed in the output
+def test_node_template_participants(json_in, yaml_out):
+    node_temp = list(yaml_out.get("topology_template").get("node_templates").keys())
+    for temp in next(iter(json_in.values()))["participants"]:
+        temp = str(temp)[str(temp).rfind('/') + 1:]
+        if "topology_template_inputs" not in temp:
+            assert temp in node_temp,"Participant missing"
+
+#checking if all the node types are generated
+def test_node_types_list(json_in, yaml_out):
+    node_type = list(yaml_out.get("node_types").keys())
+    for key in list(json_in.keys()):
+        key = str(key)[str(key).rfind('/') + 1:]
+        if key.find('sodalite.nodes.') == 0:
+            assert key in node_type
+
+#checking the detail information in node_templates for fields: 
+#   type, properties, requirement
+def test_node_template_details(json_in,yaml_out):
+    node_temp = yaml_out.get("topology_template").get("node_templates")
+    node_list = list(node_temp.keys())
+    for key, value in json_in.items():
+        key = str(key)[str(key).rfind('/') + 1:]
+        if key in node_list:
+            node_out = node_temp.get(key)
+            if "type" in value.keys():
+                t = value["type"]
+                assert t[t.rfind('/')+1:] == node_out.get("type"), "type is not correct"
+            if "properties" in value.keys():
+                for pro_item in value["properties"]:
+                    for key_pro, value_pro in pro_item.items():
+                        if isinstance(value_pro, dict) and "value" in value_pro.keys() and "label" in value_pro.keys():
+                            node_pro = node_out.get("properties").get(value_pro["label"])
+                            if isinstance(node_pro, dict):
+                                key_v = re.search('{\s(.+?):', value_pro["value"]).group(1)
+                                value_v = re.search(':\s(.+?)\s}', value_pro["value"]).group(1)
+                                assert key_v in node_pro.keys() and value_v in node_pro.values(),"properties error with label and value"
+                                pass #later
+                            elif isinstance(node_pro, list):
+                                for item in node_pro:
+                                    assert item in value_pro["value"], "properties error with label and value"
+                            else:
+                                assert node_pro == value_pro["value"], "properties error with label and value"
+            if "requirements" in value.keys():
+                node_req = node_out.get("requirements")
+                for req_index in range(0, len(value["requirements"])):
+                    for key_req, value_req in value["requirements"][req_index].items():
+                        if "value" in value_req.keys():
+                            sub_value_req = value_req["value"]
+                            for key_sub, value_sub in sub_value_req.items():
+                                if "https://" in key_sub and (isinstance(value_sub, dict) and "label" in value_sub.keys()):
+                                    print(node_req)
+                                    assert node_req[req_index].get(sub_value_req["label"]) == value_sub["label"] ,"requirement error with label and value"
+
+#checking topology template inputs
+def test_topology_template_inputs(json_in,yaml_out):
+    inputs_out = yaml_out.get("topology_template").get("inputs")
+    inputs_in = []
+    for key, value in json_in.items():
+        if "topology_template_inputs" in key:
+            inputs_in = value["inputs"]
+    for element in inputs_in:
+        for key, value in element.items():
+            if "https://" in key: 
+                key = key[key.rfind('/')+1:]
+                assert inputs_out.get(key).get("type") == value["specification"]["type"], "input type not correct"
+
+#checking node types details for: 
+#   type/derived_from, properties(description, required, type)
+def test_node_types_detail(json_in, yaml_out):
+    node_type = yaml_out.get("node_types")
+    for key, value in json_in.items():
+        key = str(key)[str(key).rfind('/') + 1:]
+        if key.find('sodalite.nodes.') == 0:
+            node = node_type.get(key)
+            if "type" in value.keys() and "https://" in value["type"]: 
+                type_in = remove_link(value["type"])
+                assert node.get("derived_from") == type_in, "node type derived_from error"
+            if "properties" in value.keys():
+                node_pro = node.get("properties")
+                for element in value["properties"]:
+                    for key_pro, value_pro in element.items():
+                        key_pro = remove_link(key_pro)
+                        if "description" in value_pro.keys():
+                            assert node_pro.get(key_pro).get("description") == value_pro["description"], "node type properties decription error"
+                        if "specifications" in value_pro.keys():
+                            value_spec = value_pro.values()
+                            if "required" in value_spec.keys():
+                                assert node_pro.get(key_pro).get("required") == value_spec["required"], "properties required error"
+                            if "type" in value_spec.keys():
+                                for key_type, value_type in value_spec["type"].items():
+                                    assert node_pro.get(key_pro).get("type") == value_type["label"], "properties type error"
+
+def remove_link(link):
+    return link[link.rfind('/')+1:]        
+
+
+def test_parser_opt():
+
+    # this component has optimisation field
+    opt_component = "optimization-skyline-extractor"
+    # expected container for $opt_component
+    opt_expected_container_runtime = "docker://modakopt/modak:tensorflow-2.1-gpu-src"
+
+    # this component has optimisation field, but optimised container not found
+    opt_not_found_component = "optimization-skyline-alignment"
+    # expected container for $opt_not_found_component
+    opt_not_found_expected_container_runtime = "snow-skyline-alignment:latest"
+
+
+    test = TestConfig("opt", "test/opt_fixture.json")
+    parser.parse_data(test.parser_dest(), test.fixture())
+    service = test.service()
+
+    opt_component_template = service.get("topology_template").get("node_templates").get(opt_component)
+    image_name = opt_component_template.get("properties").get("image_name")
+
+    assert not "optimization" in opt_component_template
+    assert image_name == opt_expected_container_runtime
+
+    opt_not_found_component_template = service.get("topology_template").get("node_templates").get(opt_not_found_component)
+    image_name = opt_not_found_component_template.get("properties").get("image_name")
+
+    assert not "optimization" in opt_not_found_component_template
+    assert image_name == opt_not_found_expected_container_runtime
+
+def test_parser_opt_job():
+
+    # this component has optimisation field
+    opt_component = "batch-app"
+    # expected container for $opt_component
+    opt_expected_container_runtime = "docker://modakopt/modak:tensorflow-2.1-gpu-src"
+
+    # this component has optimisation field, but optimised container not found
+    job_script_component = "batch-app-job-hpc"
+
+
+    test = TestConfig("opt_job", "test/opt_job_fixture.json")
+    parser.parse_data(test.parser_dest(), test.fixture())
+    service = test.service()
+
+    opt_component_template = service.get("topology_template").get("node_templates").get(opt_component)
+    image = opt_component_template.get("properties").get("container_runtime")
+
+    assert not "optimization" in opt_component_template
+    assert image == opt_expected_container_runtime
+
+    job_script_component_template = service.get("topology_template").get("node_templates").get(job_script_component)
+    content = job_script_component_template.get("properties").get("content", "")
+
+    assert len(content) > 0
+
+    assert "#PBS -N skyline-extraction-training" in content
+    assert "#PBS -q ssd" in content
+    assert "#PBS -l nodes=1:gpus=1:ssd" in content
+    assert "#PBS -l procs=40" in content
+
+def test_parser_no_opt_job():
+
+    # this component has optimisation field
+    no_opt_component = "no-opt-batch-app"
+    # expected container for $no_opt_component
+    no_opt_expected_container_runtime = "docker://some-container"
+
+    # this component has optimisation field, but optimised container not found
+    job_script_component = "no-opt-batch-app-job-hpc"
+
+
+    test = TestConfig("no_opt_job", "test/opt_job_fixture.json")
+    parser.parse_data(test.parser_dest(), test.fixture())
+    service = test.service()
+
+    no_opt_component_template = service.get("topology_template").get("node_templates").get(no_opt_component)
+    image = no_opt_component_template.get("properties").get("container_runtime")
+
+    assert not "optimization" in no_opt_component_template
+    assert image == no_opt_expected_container_runtime
+
+    job_script_component_template = service.get("topology_template").get("node_templates").get(job_script_component)
+    content = job_script_component_template.get("properties").get("content", "")
+
+    assert len(content) > 0
+
+    assert "#PBS -N no-opt-skyline-extraction-training" in content
+    assert "#PBS -q ssd" in content
+    assert "#PBS -l nodes=1:gpus=1:ssd" in content
+    assert "#PBS -l procs=40" in content
+

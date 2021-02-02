@@ -203,6 +203,7 @@ agent { label 'docker-slave' }
             }
         }
         }
+
   }
   post {
 	  failure {

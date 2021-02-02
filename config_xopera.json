@@ -1,0 +1,7 @@
+{
+    "XOPERA_ENDPOINT": "https://154.48.185.209",
+    "SWAGGER_URL" : "/docs",
+    "API_URL" : "/static/swagger.json",
+    "MANAGE_URL" : "/manage",
+    "app_name": "SODALITE iac-blueprint-builder"
+  }
