@@ -11,7 +11,7 @@ agent { label 'docker-slave' }
        docker_network = "sodalite"
        docker_registry_ip = credentials('jenkins-docker-registry-ip')
        docker_public_registry_url = "registry.hub.docker.com"
-       xopera_endpoint = "http://192.168.2.26:5000/""
+       xopera_endpoint = "http://192.168.2.26:5000/"
 
        // CI-CD vars
        // When triggered from git tag, $BRANCH_NAME is actually GIT's tag_name
