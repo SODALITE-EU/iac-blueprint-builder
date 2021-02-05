@@ -4,10 +4,13 @@ import uuid
 import pathlib
 import requests
 
+from requests.exceptions import ConnectionError
 from flask import Flask, request
 from flask_wtf.csrf import CSRFProtect
 from flask_swagger_ui import get_swaggerui_blueprint
 from .iacparser import parse_data
+
+AADM_TYPE = "AbstractApplicationDeploymentModel"
 
 class XoperaConfig:
 
@@ -25,7 +28,7 @@ class XoperaConfig:
     @classmethod
     def get_xopera_endpoint(cls):
         cls.init()
-        return os.getenv("XOPERA_ENDPOINT", cls.config.get("XOPERA_ENDPOINT", "localhost"))
+        return os.getenv("XOPERA_ENDPOINT", cls.config.get("XOPERA_ENDPOINT", "http://localhost"))
 
     @classmethod
     def get_xopera_swagger_url(cls):
@@ -51,9 +54,16 @@ class XoperaConfig:
         manage_url = os.getenv("MANAGE_URL", cls.config.get("MANAGE_URL", "/manage"))
         return cls.get_xopera_endpoint() + manage_url
 
+    @classmethod
+    def get_xopera_api_key_header(cls):
+        cls.init()
+        api_key_header = os.getenv("XOPERA_API_KEY_HEADER", cls.config.get("XOPERA_API_KEY_HEADER", "X-API-Key"))
+        return api_key_header       
+
 csrf = CSRFProtect()
 app = Flask(__name__)
-csrf.init_app(app)
+app.config['SECRET_KEY'] = os.urandom(32)
+#csrf.init_app(app)
 
 SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     XoperaConfig.get_xopera_swagger_url(),
@@ -81,13 +91,69 @@ def parse():
     download_dependencies(ansible_tuple[2], ansible_tuple[3], workpath)
     print('Dependencies are done loading ------- ')
     print('blueprint2CSAR ongoing ------- ')
+    files = prepare_files(body["name"], outpath)    
+    return send_xopera_request(files, body["data"])
+
+
+def prepare_files(name, outpath):
     os.system('python3 src/blueprint2CSAR.py %s %s --entry-definitions %s.yml --output %s' %
-              (body["name"], outpath[:outpath.rfind('/')], body["name"], outpath))
-    files = [('CSAR', open('%s.zip' % (outpath,), 'rb'))]
-    response = requests.post(XoperaConfig.get_xopera_api(), files=files, verify=True)
-    return json.loads(response.text)
+             (name, outpath[:outpath.rfind('/')], name, outpath))
+    return [('CSAR', open('%s.zip' % (outpath,), 'rb'))]
+
+
+def send_xopera_request(files, aadm_json):
+    token = get_access_token(request)
+    api_key = get_api_key(request)
+    if token:
+        headers = {"Authorization": f"Bearer {token}"}
+    elif api_key:
+        headers = {XoperaConfig.get_xopera_api_key_header(): api_key}
+    else:
+        headers = None      
+
+    params = {"project_domain": get_project_domain(aadm_json)}
+
+    try:
+        response = requests.post(XoperaConfig.get_xopera_api(), 
+                                files=files,
+                                params=params,
+                                headers=headers,
+                                verify=True)
+                                
+        return json.loads(response.text), response.status_code
+    except ConnectionError as e:
+        return f"Connection error to {XoperaConfig.get_xopera_api()}", 500    
+
+
+def get_project_domain(json):
+    for node in json.values():
+        if isinstance(node, dict) and node.get("type") == AADM_TYPE and node.get("namespace"):
+            return node.get("namespace")
+    return None            
+
+
+def get_access_token(request):
+    authorization = request.headers.get("Authorization")
+    if not authorization:
+        return None
+    try:
+        auth_type, token = authorization.split(None, 1)
+    except ValueError:
+        return None
+    if auth_type.lower() != "bearer":
+        return None
+    return token
+
+
+def get_api_key(request):
+    api_key = request.headers.get(XoperaConfig.get_xopera_api_key_header())
+    if not api_key:
+        return None
+    return api_key    
+
 
 def download_dependencies(urls, filenames, workpath):
+    # TODO add access_token for download requests
     for url, filename in zip(urls, filenames):
         print('Reading   %s ------- ' % url)
         temp = str(filename).split('/')
