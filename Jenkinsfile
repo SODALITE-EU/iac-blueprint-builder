@@ -1,36 +1,36 @@
 pipeline {
-agent { label 'docker-slave' }
-       environment {
-       // OPENSTACK SETTINGS
-       ssh_key_name = "jenkins-opera"
-       image_name = "centos7"
-       network_name = "orchestrator-network"
-       security_groups = "default,sodalite-remote-access,sodalite-rest,sodalite-uc"
-       flavor_name = "m1.medium"
-       // DOCKER SETTINGS
-       docker_network = "sodalite"
-       docker_registry_ip = credentials('jenkins-docker-registry-ip')
-       docker_public_registry_url = "registry.hub.docker.com"
-       xopera_endpoint = "http://192.168.2.26:5000/""
+    agent { label 'docker-slave' }
+    environment {
+        // OPENSTACK SETTINGS
+        ssh_key_name = "jenkins-opera"
+        image_name = "centos7"
+        network_name = "orchestrator-network"
+        security_groups = "default,sodalite-remote-access,sodalite-rest,sodalite-uc"
+        flavor_name = "m1.medium"
+        // DOCKER SETTINGS
+        docker_network = "sodalite"
+        docker_registry_ip = credentials('jenkins-docker-registry-ip')
+        docker_public_registry_url = "registry.hub.docker.com"
+        xopera_endpoint = "http://192.168.2.26:5000/"
 
-       // CI-CD vars
-       // When triggered from git tag, $BRANCH_NAME is actually GIT's tag_name
-       TAG_SEM_VER_COMPLIANT = """${sh(
+        // CI-CD vars
+        // When triggered from git tag, $BRANCH_NAME is actually GIT's tag_name
+        TAG_SEM_VER_COMPLIANT = """${sh(
                 returnStdout: true,
                 script: './validate_tag.sh SemVar $BRANCH_NAME'
             )}"""
 
-       TAG_MAJOR_RELEASE = """${sh(
+        TAG_MAJOR_RELEASE = """${sh(
                 returnStdout: true,
                 script: './validate_tag.sh MajRel $BRANCH_NAME'
             )}"""
 
-       TAG_PRODUCTION = """${sh(
+        TAG_PRODUCTION = """${sh(
                 returnStdout: true,
                 script: './validate_tag.sh production $BRANCH_NAME'
             )}"""
 
-       TAG_STAGING = """${sh(
+        TAG_STAGING = """${sh(
                 returnStdout: true,
                 script: './validate_tag.sh staging $BRANCH_NAME'
             )}"""
@@ -126,7 +126,8 @@ agent { label 'docker-slave' }
                         """
                 }
             }
-            stage('Install deploy dependencies') {
+        }
+        stage('Install deploy dependencies') {
             when {
                 allOf {
                     expression{tag "*"}
@@ -202,15 +203,14 @@ agent { label 'docker-slave' }
                 }
             }
         }
-        }
 
-  }
-  post {
-	  failure {
-	      slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-	  }
-	  fixed {
-	      slackSend (color: '#6d3be3', message: "FIXED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-	  }
-	}
+    }
+    post {
+        failure {
+            slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        }
+        fixed {
+            slackSend (color: '#6d3be3', message: "FIXED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        }
+    }
 }
