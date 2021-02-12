@@ -119,10 +119,11 @@ class AadmPreprocessor:
     def convert_str(cls, key, data):
         if isinstance(data, str) and "get_input" in data:
             get_str = data.strip("{ , }").split(":")
-            str_dict = '{{ "{}" : "{}"}}'.format(get_str[0],get_str[1].strip(" "))
-            result = json.loads(str_dict)
-            del data
-            return True, key, result
+            if len(get_str) == 2:
+                str_dict = '{{ "{}" : "{}"}}'.format(get_str[0],get_str[1].strip(" "))
+                result = json.loads(str_dict)
+                del data
+                return True, key, result
         return False, key, data
 
     @classmethod
