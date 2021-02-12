@@ -83,7 +83,10 @@ def parse():
     if not os.path.exists(workpath):
         os.makedirs(workpath)
     outpath = os.path.join(workpath, body["name"])
-    ansible_tuple = parse_data(outpath, body["data"])
+    try:
+        ansible_tuple = parse_data(outpath, body["data"])
+    except Exception as e:
+        return f"IaC Builder AADM parsing error {e}", 500        
     print('Downloading Ansible files ---------')
     download_dependencies(ansible_tuple[0], ansible_tuple[1], workpath)
     print('Ansible files done ------- ')
@@ -122,7 +125,7 @@ def send_xopera_request(files, aadm_json):
                                 
         return json.loads(response.text), response.status_code
     except ConnectionError as e:
-        return f"Connection error to {XoperaConfig.get_xopera_api()}", 500    
+        return f"IaC Builder Connection error to {XoperaConfig.get_xopera_api()}", 500    
 
 
 def get_project_domain(json):
