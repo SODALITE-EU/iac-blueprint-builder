@@ -423,7 +423,7 @@ class AadmTransformer:
              "node_templates": {},
              "input": {}
              }
-
+        top_key = None
         for key, value in aadm.items():
             
             if "topology_template_inputs" in key:                
@@ -456,7 +456,8 @@ class AadmTransformer:
         cls.transform_optimization(result)
 
         result["topology_template"] = {}
-        result["topology_template"]["inputs"] = result["input"][top_key]
+        if top_key:
+            result["topology_template"]["inputs"] = result["input"][top_key]
         result["topology_template"]["node_templates"] = result["node_templates"]        
         del result["node_templates"]
         del result["input"]
