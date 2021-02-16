@@ -51,7 +51,7 @@ class XoperaConfig:
     @classmethod
     def get_xopera_api(cls):
         cls.init()
-        manage_url = os.getenv("MANAGE_URL", cls.config.get("MANAGE_URL", "/manage"))
+        manage_url = os.getenv("MANAGE_URL", cls.config.get("MANAGE_URL", "/blueprint"))
         return cls.get_xopera_endpoint() + manage_url
 
     @classmethod
