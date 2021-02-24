@@ -148,7 +148,7 @@ def test_node_template_details(json_in,yaml_out):
             node_out = node_temp.get(key)
             if "type" in value.keys():
                 t = value["type"]
-                assert t[t.rfind('/')+1:] == node_out.get("type"), "type is not correct"
+                assert remove_link(t) == node_out.get("type"), "type is not correct"
             if "properties" in value.keys():
                 for pro_item in value["properties"]:
                     for key_pro, value_pro in pro_item.items():
@@ -172,7 +172,6 @@ def test_node_template_details(json_in,yaml_out):
                             sub_value_req = value_req["value"]
                             for key_sub, value_sub in sub_value_req.items():
                                 if "https://" in key_sub and (isinstance(value_sub, dict) and "label" in value_sub.keys()):
-                                    print(node_req)
                                     assert node_req[req_index].get(sub_value_req["label"]) == value_sub["label"] ,"requirement error with label and value"
 
 #checking topology template inputs
@@ -185,17 +184,19 @@ def test_topology_template_inputs(json_in,yaml_out):
     for element in inputs_in:
         for key, value in element.items():
             if "https://" in key: 
-                key = key[key.rfind('/')+1:]
+                key = remove_link(key)
                 assert inputs_out.get(key).get("type") == value["specification"]["type"], "input type not correct"
 
 #checking node types details for: 
 #   type/derived_from, properties(description, required, type)
+#   attributes(description, specification), requirements, capabilities
 def test_node_types_detail(json_in, yaml_out):
     node_type = yaml_out.get("node_types")
     for key, value in json_in.items():
-        key = str(key)[str(key).rfind('/') + 1:]
+        key = remove_link(key)
         if key.find('sodalite.nodes.') == 0:
             node = node_type.get(key)
+            #derived from:
             if "type" in value.keys() and "https://" in value["type"]: 
                 type_in = remove_link(value["type"])
                 assert node.get("derived_from") == type_in, "node type derived_from error"
@@ -205,15 +206,58 @@ def test_node_types_detail(json_in, yaml_out):
                     for key_pro, value_pro in element.items():
                         key_pro = remove_link(key_pro)
                         if "description" in value_pro.keys():
-                            assert node_pro.get(key_pro).get("description") == value_pro["description"], "node type properties decription error"
-                        if "specifications" in value_pro.keys():
-                            value_spec = value_pro.values()
+                            assert node_pro.get(key_pro).get("description") == value_pro["description"], "node type properties description error"
+                        if "specification" in value_pro.keys():
+                            value_spec = value_pro["specification"]
                             if "required" in value_spec.keys():
                                 assert node_pro.get(key_pro).get("required") == value_spec["required"], "properties required error"
                             if "type" in value_spec.keys():
                                 for key_type, value_type in value_spec["type"].items():
                                     assert node_pro.get(key_pro).get("type") == value_type["label"], "properties type error"
+            if "attributes" in value.keys():
+                node_att = node.get("attributes")
+                for element in value["attributes"]:
+                    for key_att, value_att in element.items():
+                        key_att = remove_link(key_att)
+                        if "description" in value_att.keys():
+                            assert node_att.get(key_att).get("description") == value_att["description"], "node type attribute description error"
+                        if "specification" in value_att.keys():
+                            value_spec = value_att["specification"]
+                            if "type" in value_spec.keys():
+                                for key_type, value_type in value_spec["type"].items():
+                                    assert node_att.get(key_att).get("type") == value_type["label"], "attribute type error"
+            if "requirements" in value.keys():
+                node_req = node.get("requirements")
+                for req_index in range(0, len(value["requirements"])):
+                    for key_req, value_req in value["requirements"][req_index].items():
+                        key_req = remove_link(key_req)
+                        if "specification" in value_req.keys():
+                            for key_sp, value_sp in value_req["specification"].items():
+                                if isinstance(value_sp, dict):
+                                    for key_sub, value_sub in value_sp.items():
+                                        if "label" in value_sub.keys():
+                                            assert node_req[req_index].get(key_req).get(key_sp) == value_sub["label"], "node type requirement specification error"
+                                if isinstance(value_sp, list):
+                                    req_list = node_req[req_index].get(key_req).get(key_sp)
+                                    for index in range(0, len(req_list)):
+                                        assert str(req_list[index]) == value_sp[index], "node type requirement specification error"
+            if "capabilities" in value.keys():
+                node_cap = node.get("capabilities")
+                for element in value["capabilities"]:
+                    for key_cap, value_cap in element.items():
+                        key_cap = remove_link(key_cap)
+                        for key_label, value_label in value_cap["specification"]["type"].items():
+                            assert node_cap.get(key_cap).get("type") == value_label["label"], "node type capability specification error"
 
+
+
+
+                                    
+
+
+
+
+#helper funciton to extract info from links
 def remove_link(link):
     return link[link.rfind('/')+1:]        
 
