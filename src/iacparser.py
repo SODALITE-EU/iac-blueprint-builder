@@ -93,6 +93,7 @@ class AadmPreprocessor:
     url_regex = r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"
     # list of keys to convert
     convert_list_dict = ["properties", "attributes", "interfaces", "capabilities", "inputs"]
+    convert_dict_list = ["constraints"]
 
     #path and urls
     ansible_urls = []
@@ -113,6 +114,17 @@ class AadmPreprocessor:
                         result[key_int] = value
             return True, key, result
         return False, key, data
+
+    # some maps must be converted to lists
+    # in order to be TOSCA complaint
+    @classmethod
+    def convert_dict(cls, key, data):
+        if isinstance(data, dict) and key in cls.convert_dict_list:
+            result = []
+            for key_int, value in data.items():                
+                result.append({key_int : value})                    
+            return True, key, result
+        return False, key, data        
 
     #to convert get_input string to dict
     @classmethod
@@ -239,6 +251,7 @@ class AadmPreprocessor:
         preprocess_list = [
             cls.preprocess_data,
             cls.convert_list,
+            cls.convert_dict,
             cls.collapse_labels,
             cls.collapse_values,
             cls.collapse_specifications,
