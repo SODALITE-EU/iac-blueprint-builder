@@ -13,6 +13,23 @@ pipeline {
         docker_public_registry_url = "registry.hub.docker.com"
         xopera_endpoint = "http://192.168.2.26:5000/"
 
+        // OPENSTACK DEPLOYMENT SETTINGS
+        OS_PROJECT_DOMAIN_NAME = "Default"
+        OS_USER_DOMAIN_NAME = "Default"
+        OS_PROJECT_NAME = "orchestrator"
+        OS_TENANT_NAME = "orchestrator"
+        OS_USERNAME = credentials('os-username')
+        OS_PASSWORD = credentials('os-password')
+        OS_AUTH_URL = credentials('os-auth-url')
+        OS_INTERFACE = "public"
+        OS_IDENTITY_API_VERSION = "3"
+        OS_REGION_NAME = "RegionOne"
+        OS_AUTH_PLUGIN = "password"
+
+        // ROOT X.509 CERTIFICATES
+        ca_crt_file = credentials('xopera-ca-crt')
+        ca_key_file = credentials('xopera-ca-key')
+
         // CI-CD vars
         // When triggered from git tag, $BRANCH_NAME is actually GIT's tag_name
         TAG_SEM_VER_COMPLIANT = """${sh(
@@ -141,12 +158,16 @@ pipeline {
                     python3 -m venv venv-deploy
                     . venv-deploy/bin/activate
                     python3 -m pip install --upgrade pip
-                    python3 -m pip install opera[openstack]==0.6.2 docker
+                    python3 -m pip install opera[openstack]==0.6.4 docker
                     ansible-galaxy install geerlingguy.pip,2.0.0 --force
-                    ansible-galaxy install geerlingguy.docker,2.9.0 --force
+                    ansible-galaxy install geerlingguy.docker,3.0.0 --force
                     ansible-galaxy install geerlingguy.repo-epel,3.0.0 --force
                     rm -r -f openstack-blueprint/modules/
-                    git clone -b 3.1.0 https://github.com/SODALITE-EU/iac-modules.git openstack-blueprint/modules/
+                    git clone -b 3.2.1 https://github.com/SODALITE-EU/iac-modules.git openstack-blueprint/modules/
+                    cp ${ca_crt_file} openstack-blueprint/modules//docker/artifacts/ca.crt
+                    cp ${ca_crt_file} openstack-blueprint/modules//misc/tls/artifacts/ca.crt
+                    cp ${ca_key_file} openstack-blueprint/modules//docker/artifacts/ca.key
+                    cp ${ca_key_file} openstack-blueprint/modules//misc/tls/artifacts/ca.key
                    """
             }
         }
