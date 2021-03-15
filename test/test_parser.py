@@ -88,9 +88,6 @@ def test_artifacts_extraction():
                 ['http://160.40.52.200:8084/Ansibles/fde69a72-7375-4fef-adc7-e941cb985eec', 
                 'http://160.40.52.200:8084/Ansibles/d6f34eaa-25cf-40fb-a31a-da244c0c9d37', 
                 'http://160.40.52.200:8084/Ansibles/b8ad4903-01db-4433-8eaa-cbff67edee9b', 
-                'http://160.40.52.200:8084/Ansibles/4ba88e9d-2f5a-43b7-b658-3ff59fe5c3cc', 
-                'http://160.40.52.200:8084/Ansibles/c91b757e-2cb5-4596-b80f-bdbea6fb4ccd', 
-                'http://160.40.52.200:8084/Ansibles/30c3abbe-7718-433e-bf3b-dab3093d690d', 
                 'http://160.40.52.200:8084/Ansibles/2dd0cacf-014c-4c08-a211-d222e41d3c21'],
 
                 ['artifacts/ca.key',
