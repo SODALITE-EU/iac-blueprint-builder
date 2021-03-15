@@ -11,7 +11,7 @@ pipeline {
         docker_network = "sodalite"
         docker_registry_ip = credentials('jenkins-docker-registry-ip')
         docker_public_registry_url = "registry.hub.docker.com"
-        xopera_endpoint = "http://192.168.2.26:5000/"
+        xopera_endpoint = "http://192.168.2.15:5000/"
 
         // OPENSTACK DEPLOYMENT SETTINGS
         OS_PROJECT_DOMAIN_NAME = "Default"
