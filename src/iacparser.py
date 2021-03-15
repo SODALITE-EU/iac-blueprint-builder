@@ -183,8 +183,8 @@ class AadmPreprocessor:
                     path_list = cls.get_path(ele["path"])
                     path = '{}/{}'.format(path_list[0],path_list[1])
                 dep_path.append(path)
-                cls.dependency_urls.append(ele["url"])
                 if path not in cls.dependency_paths:
+                    cls.dependency_urls.append(ele["url"])
                     cls.dependency_paths.append(path)
             return True, key, dep_path
         return False, key, data
