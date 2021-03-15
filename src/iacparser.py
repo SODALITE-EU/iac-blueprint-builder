@@ -386,6 +386,9 @@ class AadmTransformer:
             
             for req in reqs:
                 app_req = req.get("application", "")
+                if isinstance(app_req, dict):
+                    app_req = app_req.get("node", "")
+
                 if app_req in opt_nodes:
                     exec_nodes[key] = app_req
 
@@ -405,6 +408,8 @@ class AadmTransformer:
             host_node = {}
             for req in result["node_templates"][node].get("requirements", []):
                 host_req = req.get("host", "")
+                if isinstance(host_req, dict):
+                    host_req = host_req.get("node", "")
                 if host_req:
                     host_node = result["node_templates"][host_req]
 

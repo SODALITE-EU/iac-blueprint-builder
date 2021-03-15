@@ -65,11 +65,12 @@
     "requirements": [
       {
         "https://www.sodalite.eu/ontologies/tosca/host": {
-          "value": {
-            "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-vm": {
-              "label": "optimization-vm"
-            },
-            "label": "host"
+          "specification": {
+            "node": {
+              "https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-vm": {
+                "label": "optimization-vm"
+              }
+            }
           }
         }
       },
