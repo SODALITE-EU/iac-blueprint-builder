@@ -305,7 +305,13 @@ class AadmPreprocessor:
 class AadmTransformer:
 
     # list of keys to remove from AADM
-    skip_list = ["isNodeTemplate"]
+    skip_list = ["isNodeTemplate", "class"]
+
+    # valid tosca types
+    valid_tosca_types = [
+        "artifact_types", "capability_types" , "data_types", "group_types", 
+        "interface_types", "node_types", "policy_types", "relationship_types",
+    ]
     
     #set types
     @staticmethod
@@ -453,17 +459,13 @@ class AadmTransformer:
                 if value["isNodeTemplate"]:
                     section = "node_templates"
                 else:
-                    if "sodalite.datatypes" in key:
-                        if "data_types" not in result:
-                            result["data_types"] = {}
-                        section = "data_types"
-
-                    elif "sodalite.relationships" in key:
-                        if "relationship_types" not in result:
-                            result["relationship_types"] = {}
-                        section = "relationship_types"
+                    tosca_type_class = value.get("class", "")
+                    if tosca_type_class in cls.valid_tosca_types:
+                        if tosca_type_class not in result:
+                            result[tosca_type_class] = {}
+                        section = tosca_type_class
                     else:
-                        section = "node_types"          
+                        continue
             else:
                 continue
 

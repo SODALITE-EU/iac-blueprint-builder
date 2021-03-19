@@ -1,0 +1,610 @@
+{
+  "https://www.sodalite.eu/ontologies/workspace/1/qjequlvb7r880n6rdudjl7lrlb/AADM_ruo23velk4pknb2vbj809mi0b": {
+    "id": "https://www.sodalite.eu/ontologies/workspace/1/qjequlvb7r880n6rdudjl7lrlb/AADM_ruo23velk4pknb2vbj809mi0b",
+    "namespace": "clinical",
+    "type": "AbstractApplicationDeploymentModel",
+    "createdBy": "https://www.sodalite.eu/ontologies/workspace/1/qjequlvb7r880n6rdudjl7lrlb/27827d44-0f6c-11ea-8d71-362b9e155667",
+    "createdAt": "2021-03-19T12:59:31.039+02:00",
+    "version": "1",
+    "participants": [
+      "https://www.sodalite.eu/ontologies/workspace/1/clinical/hlrs-testbed"
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/clinical/hlrs-testbed": {
+    "type": "https://www.sodalite.eu/ontologies/workspace/1/batch/sodalite.nodes.hpc.WM",
+    "isNodeTemplate": true,
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/username": {
+          "value": "username",
+          "label": "username"
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/batch/scheduler": {
+          "value": "torque",
+          "label": "scheduler"
+        }
+      }
+    ],
+    "attributes": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/public_address": {
+          "value": "localhost",
+          "label": "public_address"
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/batch/optimisations": {
+          "properties" : [
+            {
+              "https://www.sodalite.eu/ontologies/workspace/1/hpc/target": {
+                "value": "optimised_target_name",
+                "label": "target"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/batch/resources": {
+          "properties" : [
+            {
+              "https://www.sodalite.eu/ontologies/workspace/1/hpc/gpus": {
+                "value": 5,
+                "label": "gpus"
+              }
+            },
+            {
+              "https://www.sodalite.eu/ontologies/workspace/1/batch/cpus": {
+                "value": 200,
+                "label": "cpus"
+              }
+            },
+            {
+              "https://www.sodalite.eu/ontologies/workspace/1/batch/memory": {
+                "value": 650687,
+                "label": "memory"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/batch/sodalite.nodes.hpc.WM": {
+    "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Compute",
+    "isNodeTemplate": false,
+    "class": "node_types",
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/openstack/username": {
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/batch/scheduler": {
+          "specification": {
+            "constraints": {
+              "valid_values": [
+                "batch",
+                "torque",
+                "slurm"
+              ]
+            },
+            "default": "batch",
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/hpc/ssh-key": {
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            },
+            "default": ""
+          }
+        }
+      }
+    ],
+    "attributes": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/public_address": {
+          "description": "The primary public IP address assigned by the cloud provider that applications may use to access the Compute node.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/ports": {
+          "description": "The list of logical ports assigned to the compute host instance and information about them.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/map": {
+                "label": "map"
+              }
+            },
+            "entry_schema": {
+              "type": {
+                "https://www.sodalite.eu/ontologies/tosca/tosca.datatypes.network.PortInfo": {
+                  "label": "tosca.datatypes.network.PortInfo"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/networks": {
+          "description": "The list of logical networks assigned to the compute host instance and information about them.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/map": {
+                "label": "map"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_id": {
+          "description": "A unique identifier of the realized instance of a Node Template that derives from any TOSCA normative type",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/state": {
+          "description": "The state of the node instance.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/private_address": {
+          "description": "The primary private IP address assigned by the cloud provider that applications may use to access the Compute node.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/entry_schema": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.datatypes.network.NetworkInfo": {
+                "label": "tosca.datatypes.network.NetworkInfo"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/tosca_name": {
+          "description": "Reflects the name of the Node Template as defined in the TOSCA service template. This name is not unique to the realized instance model of corresponding deployed application as each template in the model can result in one or more instances (e.g., scaled) when orchestrated to a provider environment.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "requirements": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/dependency": {
+          "specification": {
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            },
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Root": {
+                "label": "tosca.nodes.Root"
+              }
+            },
+            "occurrences": [
+              "0",
+              "UNBOUNDED"
+            ],
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.DependsOn": {
+                "label": "tosca.relationships.DependsOn"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/local_storage": {
+          "specification": {
+            "occurrences": [
+              "0",
+              "UNBOUNDED"
+            ],
+            "relationship": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.relationships.AttachesTo": {
+                "label": "tosca.relationships.AttachesTo"
+              }
+            },
+            "capability": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Attachment": {
+                "label": "tosca.capabilities.Attachment"
+              }
+            },
+            "node": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Storage.BlockStorage": {
+                "label": "tosca.nodes.Storage.BlockStorage"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/batch/resources": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/workspace/1/batch/sodalite.capabilities.WM.JobResources": {
+                "label": "sodalite.capabilities.WM.JobResources"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/scalable": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Scalable": {
+                "label": "tosca.capabilities.Scalable"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/os": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.OperatingSystem": {
+                "label": "tosca.capabilities.OperatingSystem"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/binding": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.network.Bindable": {
+                "label": "tosca.capabilities.network.Bindable"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/endpoint": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Endpoint.Admin": {
+                "label": "tosca.capabilities.Endpoint.Admin"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Compute": {
+                "label": "tosca.capabilities.Compute"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/feature": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Node": {
+                "label": "tosca.capabilities.Node"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/host": {
+          "specification": {
+            "valid_source_types": [
+              "tosca.nodes.SoftwareComponent"
+            ],
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Compute": {
+                "label": "tosca.capabilities.Compute"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/batch/optimisations": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/workspace/1/batch/sodalite.capabilities.OptimisedTarget": {
+                "label": "sodalite.capabilities.OptimisedTarget"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "interfaces": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/Standard": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/tosca.interfaces.node.lifecycle.Standard": {
+                "label": "tosca.interfaces.node.lifecycle.Standard"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/batch/sodalite.capabilities.WM.JobResources": {
+    "type": "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Compute",
+    "isNodeTemplate": false,
+    "class": "capability_types",
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/cpu_frequency": {
+          "description": "Specifies the operating frequency of CPU's core. This property expresses the expected frequency of one (1) CPU as provided by the property “num_cpus”.",
+          "specification": {
+            "constraints": {
+              "greater_or_equal": "0.1 GHz"
+            },
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/scalar-unit.frequency": {
+                "label": "scalar-unit.frequency"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/disk_size": {
+          "description": "Size of the local disk available to applications running on the Compute node.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/scalar-unit.size": {
+                "label": "scalar-unit.size"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/num_cpus": {
+          "description": "Number of (actual or virtual) CPUs associated with the Compute node.",
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/integer": {
+                "label": "integer"
+              }
+            },
+            "constraints": {
+              "greater_or_equal": 1
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/batch/cpus": {
+          "specification": {
+            "required": true,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/integer": {
+                "label": "integer"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/batch/memory": {
+          "specification": {
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/integer": {
+                "label": "integer"
+              }
+            },
+            "required": false
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/workspace/1/hpc/gpus": {
+          "specification": {
+            "required": true,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/integer": {
+                "label": "integer"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/mem_size": {
+          "description": "Size of memory available to applications running on the Compute node.",
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/scalar-unit.size": {
+                "label": "scalar-unit.size"
+              }
+            },
+            "constraints": {
+              "greater_or_equal": "0 MB"
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/name": {
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "https://www.sodalite.eu/ontologies/workspace/1/batch/sodalite.capabilities.OptimisedTarget": {
+    "type": "https://www.sodalite.eu/ontologies/tosca/tosca.capabilities.Compute",
+    "isNodeTemplate": false,
+    "class": "capability_types",
+    "properties": [
+      {
+        "https://www.sodalite.eu/ontologies/tosca/mem_size": {
+          "description": "Size of memory available to applications running on the Compute node.",
+          "specification": {
+            "constraints": {
+              "greater_or_equal": "0 MB"
+            },
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/scalar-unit.size": {
+                "label": "scalar-unit.size"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/disk_size": {
+          "description": "Size of the local disk available to applications running on the Compute node.",
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/scalar-unit.size": {
+                "label": "scalar-unit.size"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/num_cpus": {
+          "description": "Number of (actual or virtual) CPUs associated with the Compute node.",
+          "specification": {
+            "constraints": {
+              "greater_or_equal": 1
+            },
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/integer": {
+                "label": "integer"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/name": {
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/target": {
+          "specification": {
+            "required": false,
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/string": {
+                "label": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "https://www.sodalite.eu/ontologies/tosca/cpu_frequency": {
+          "description": "Specifies the operating frequency of CPU's core. This property expresses the expected frequency of one (1) CPU as provided by the property “num_cpus”.",
+          "specification": {
+            "constraints": {
+              "greater_or_equal": "0.1 GHz"
+            },
+            "type": {
+              "https://www.sodalite.eu/ontologies/tosca/scalar-unit.frequency": {
+                "label": "scalar-unit.frequency"
+              }
+            },
+            "required": false
+          }
+        }
+      }
+    ]
+  }
+}

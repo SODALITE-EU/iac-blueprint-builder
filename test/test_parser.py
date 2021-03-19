@@ -259,7 +259,27 @@ def remove_link(link):
     return link[link.rfind('/')+1:]        
 
 
-def test_parser_opt():
+def mock_modak_get_opt_image(opt_json_string: str):
+    if '"xla": true' in opt_json_string:
+        return "docker://modakopt/modak:tensorflow-2.1-gpu-src"
+    else:
+        return ""
+
+
+def mock_modak_get_opt_job_content(app, target, job_options, opt_json_string):
+    return """
+    #PBS -N {app_tag}
+    #PBS -q {queue}
+    #PBS -l nodes={node_count}:gpus={request_gpus}:{queue}
+    #PBS -l procs={core_count}
+    """.format(
+        app_tag=app.get("app_tag"), queue=job_options.get("queue"), node_count=job_options.get("node_count"), 
+        request_gpus=job_options.get("request_gpus"), core_count=job_options.get("core_count"))
+
+
+def test_parser_opt(mocker):
+
+    mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
 
     # this component has optimisation field
     opt_component = "optimization-skyline-extractor"
@@ -288,7 +308,10 @@ def test_parser_opt():
     assert not "optimization" in opt_not_found_component_template
     assert image_name == opt_not_found_expected_container_runtime
 
-def test_parser_opt_job():
+def test_parser_opt_job(mocker):
+
+    mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
+    mocker.patch('src.iacparser.ModakConfig.get_opt_job_content', new=mock_modak_get_opt_job_content)
 
     # this component has optimisation field
     opt_component = "batch-app"
@@ -319,7 +342,10 @@ def test_parser_opt_job():
     assert "#PBS -l nodes=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
 
-def test_parser_no_opt_job():
+def test_parser_no_opt_job(mocker):
+
+    mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
+    mocker.patch('src.iacparser.ModakConfig.get_opt_job_content', new=mock_modak_get_opt_job_content)
 
     # this component has optimisation field
     no_opt_component = "no-opt-batch-app"
@@ -350,3 +376,29 @@ def test_parser_no_opt_job():
     assert "#PBS -l nodes=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
 
+def test_parser_tosca_capabilities():
+
+    test = TestConfig("capabilities", "test/mixed_tosca_types_fixture.json")
+    parser.parse_data(test.parser_dest(), test.fixture())
+    service = test.service()
+
+    assert service.get("capability_types") != None
+    assert service.get("capability_types").get("sodalite.capabilities.WM.JobResources") != None
+    assert service.get("capability_types").get("sodalite.capabilities.OptimisedTarget") != None
+    assert service.get("capability_types").get("sodalite.capabilities.OptimisedTarget").get("properties").get("target").get("type") == "string"
+    assert service.get("node_types").get("sodalite.capabilities.WM.JobResources") == None
+    assert service.get("node_types").get("sodalite.capabilities.OptimisedTarget") == None
+    assert service.get("topology_template").get("node_templates").get("hlrs-testbed").get("capabilities").get("optimisations").get("properties").get("target") == "optimised_target_name"
+    assert service.get("topology_template").get("node_templates").get("hlrs-testbed").get("capabilities").get("resources").get("properties").get("gpus") == 5
+    assert service.get("topology_template").get("node_templates").get("hlrs-testbed").get("capabilities").get("resources").get("properties").get("cpus") == 200
+    assert service.get("topology_template").get("node_templates").get("hlrs-testbed").get("capabilities").get("resources").get("properties").get("memory") == 650687
+
+def test_parser_class_removal_from_tosca_types():
+
+    test = TestConfig("removed_tosca_types", "test/mixed_tosca_types_fixture.json")
+    parser.parse_data(test.parser_dest(), test.fixture())
+    service = test.service()
+
+    assert service.get("capability_types").get("sodalite.capabilities.WM.JobResources").get("class") == None
+    assert service.get("capability_types").get("sodalite.capabilities.OptimisedTarget").get("class") == None
+    assert service.get("node_types").get("sodalite.nodes.hpc.WM").get("class") == None
