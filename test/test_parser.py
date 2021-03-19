@@ -259,7 +259,27 @@ def remove_link(link):
     return link[link.rfind('/')+1:]        
 
 
-def test_parser_opt():
+def mock_modak_get_opt_image(opt_json_string: str):
+    if '"xla": true' in opt_json_string:
+        return "docker://modakopt/modak:tensorflow-2.1-gpu-src"
+    else:
+        return ""
+
+
+def mock_modak_get_opt_job_content(app, target, job_options, opt_json_string):
+    return """
+    #PBS -N {app_tag}
+    #PBS -q {queue}
+    #PBS -l nodes={node_count}:gpus={request_gpus}:{queue}
+    #PBS -l procs={core_count}
+    """.format(
+        app_tag=app.get("app_tag"), queue=job_options.get("queue"), node_count=job_options.get("node_count"), 
+        request_gpus=job_options.get("request_gpus"), core_count=job_options.get("core_count"))
+
+
+def test_parser_opt(mocker):
+
+    mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
 
     # this component has optimisation field
     opt_component = "optimization-skyline-extractor"
@@ -288,7 +308,10 @@ def test_parser_opt():
     assert not "optimization" in opt_not_found_component_template
     assert image_name == opt_not_found_expected_container_runtime
 
-def test_parser_opt_job():
+def test_parser_opt_job(mocker):
+
+    mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
+    mocker.patch('src.iacparser.ModakConfig.get_opt_job_content', new=mock_modak_get_opt_job_content)
 
     # this component has optimisation field
     opt_component = "batch-app"
@@ -319,7 +342,10 @@ def test_parser_opt_job():
     assert "#PBS -l nodes=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
 
-def test_parser_no_opt_job():
+def test_parser_no_opt_job(mocker):
+
+    mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
+    mocker.patch('src.iacparser.ModakConfig.get_opt_job_content', new=mock_modak_get_opt_job_content)
 
     # this component has optimisation field
     no_opt_component = "no-opt-batch-app"
