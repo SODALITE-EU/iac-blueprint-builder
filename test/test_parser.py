@@ -350,3 +350,29 @@ def test_parser_no_opt_job():
     assert "#PBS -l nodes=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
 
+def test_parser_tosca_capabilities():
+
+    test = TestConfig("capabilities", "test/mixed_tosca_types_fixture.json")
+    parser.parse_data(test.parser_dest(), test.fixture())
+    service = test.service()
+
+    assert service.get("capability_types") != None
+    assert service.get("capability_types").get("sodalite.capabilities.WM.JobResources") != None
+    assert service.get("capability_types").get("sodalite.capabilities.OptimisedTarget") != None
+    assert service.get("capability_types").get("sodalite.capabilities.OptimisedTarget").get("properties").get("target").get("type") == "string"
+    assert service.get("node_types").get("sodalite.capabilities.WM.JobResources") == None
+    assert service.get("node_types").get("sodalite.capabilities.OptimisedTarget") == None
+    assert service.get("topology_template").get("node_templates").get("hlrs-testbed").get("capabilities").get("optimisations").get("properties").get("target") == "optimised_target_name"
+    assert service.get("topology_template").get("node_templates").get("hlrs-testbed").get("capabilities").get("resources").get("properties").get("gpus") == 5
+    assert service.get("topology_template").get("node_templates").get("hlrs-testbed").get("capabilities").get("resources").get("properties").get("cpus") == 200
+    assert service.get("topology_template").get("node_templates").get("hlrs-testbed").get("capabilities").get("resources").get("properties").get("memory") == 650687
+
+def test_parser_class_removal_from_tosca_types():
+
+    test = TestConfig("removed_tosca_types", "test/mixed_tosca_types_fixture.json")
+    parser.parse_data(test.parser_dest(), test.fixture())
+    service = test.service()
+
+    assert service.get("capability_types").get("sodalite.capabilities.WM.JobResources").get("class") == None
+    assert service.get("capability_types").get("sodalite.capabilities.OptimisedTarget").get("class") == None
+    assert service.get("node_types").get("sodalite.nodes.hpc.WM").get("class") == None

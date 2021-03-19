@@ -532,6 +532,7 @@
   "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerizedComponent": {
     "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.SoftwareComponent",
     "isNodeTemplate": false,
+    "class": "node_types",
     "properties": [
       {
         "https://www.sodalite.eu/ontologies/workspace/1/docker/command": {
@@ -1010,6 +1011,7 @@
   "https://www.sodalite.eu/ontologies/workspace/1/openstack/sodalite.nodes.OpenStack.VM": {
     "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Compute",
     "isNodeTemplate": false,
+    "class": "node_types",
     "properties": [
       {
         "https://www.sodalite.eu/ontologies/workspace/1/openstack/username": {
@@ -1594,6 +1596,7 @@
   "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerRegistry": {
     "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.SoftwareComponent",
     "isNodeTemplate": false,
+    "class": "node_types",
     "properties": [
       {
         "https://www.sodalite.eu/ontologies/tosca/component_version": {
@@ -1833,6 +1836,7 @@
   "https://www.sodalite.eu/ontologies/workspace/1/openstack/sodalite.nodes.OpenStack.SecurityRules": {
     "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.Root",
     "isNodeTemplate": false,
+    "class": "node_types",
     "properties": [
       {
         "https://www.sodalite.eu/ontologies/tosca/ports": {
@@ -2044,6 +2048,7 @@
   "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerHost": {
     "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.SoftwareComponent",
     "isNodeTemplate": false,
+    "class": "node_types",
     "properties": [
       {
         "https://www.sodalite.eu/ontologies/tosca/admin_credential": {
@@ -2243,6 +2248,7 @@
   "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.DockerNetwork": {
     "type": "https://www.sodalite.eu/ontologies/tosca/tosca.nodes.SoftwareComponent",
     "isNodeTemplate": false,
+    "class": "node_types",
     "properties": [
       {
         "https://www.sodalite.eu/ontologies/tosca/admin_credential": {
