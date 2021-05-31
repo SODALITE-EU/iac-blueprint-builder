@@ -1,7 +1,7 @@
 import yaml
 import json
 import re
-import os 
+import os
 import requests
 import pathlib
 
@@ -9,7 +9,7 @@ from yaml import ScalarNode, CollectionNode, SequenceNode, MappingNode
 
 
 class ModakConfig:
-    
+
     config_path = pathlib.Path(__file__).parent / pathlib.Path('../config_modak.json')
     config = None
 
@@ -64,13 +64,13 @@ class ModakConfig:
         response = requests.post(
             cls.get_modak_api_job(),
             headers= { "Content-Type": "application/json" },
-            json= { 
-                "job": { 
+            json= {
+                "job": {
                     "application": app,
                     "target": target,
                     "job_options": job_options,
-                    "optimisation": opt.get("optimization", {}) 
-                } 
+                    "optimisation": opt.get("optimization", {})
+                }
             })
         if response.status_code != 200:
             print("Optimisation request error")
@@ -92,7 +92,7 @@ class AadmPreprocessor:
     # regex to check if string is URL
     url_regex = r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"
     # list of keys to convert
-    convert_list_dict = ["properties", "attributes", "interfaces", "capabilities", "inputs"]
+    convert_list_dict = ["properties", "attributes", "interfaces", "capabilities", "inputs", "outputs"]
     convert_dict_list = ["constraints"]
 
     #path and urls
@@ -121,10 +121,10 @@ class AadmPreprocessor:
     def convert_dict(cls, key, data):
         if isinstance(data, dict) and key in cls.convert_dict_list:
             result = []
-            for key_int, value in data.items():                
-                result.append({key_int : value})                    
+            for key_int, value in data.items():
+                result.append({key_int : value})
             return True, key, result
-        return False, key, data        
+        return False, key, data
 
     #to convert get_input string to dict
     @classmethod
@@ -153,7 +153,7 @@ class AadmPreprocessor:
     def collapse_values(key, data):
         if (isinstance(data, dict)
                 and "value" in data
-                and len(data) == 1): 
+                and len(data) == 1):
             return True, key, data["value"]
         return False, key, data
 
@@ -169,7 +169,7 @@ class AadmPreprocessor:
             data.update(spec)
             return True, key, data
         return False, key, data
-    
+
     #formatting dependencies path and url
     @classmethod
     def dep_path_url(cls, key, data):
@@ -201,7 +201,7 @@ class AadmPreprocessor:
             data["primary"] = '{}/{}_{}'.format(path[0],uri,path[1])
             cls.ansible_paths.append(data["primary"])
             return True, key, data
-        return False, key, data 
+        return False, key, data
 
     #remove replace empty dictionaries with key values
     @staticmethod
@@ -211,7 +211,7 @@ class AadmPreprocessor:
             check = next(iter(data))
             if isinstance(data[check], dict) and len(data[check]) == 0:
                 return True, key, check
-        return False, key, data  
+        return False, key, data
 
     # extract type values from URLs
     @classmethod
@@ -238,7 +238,7 @@ class AadmPreprocessor:
     #convert occurrences type from str to int in yaml.scalarnode
     @classmethod
     def convert_int(cls, tag):
-        split_tag = tag.split(":") 
+        split_tag = tag.split(":")
         get_url = split_tag[-1]
         if get_url=="str":
             base_tag = ":".join(split_tag[:2])
@@ -289,7 +289,7 @@ class AadmPreprocessor:
         cls.ansible_paths = []
         cls.dependency_urls = []
         cls.dependency_paths = []
-        result = {}  
+        result = {}
         changed = True
         result = aadm.copy()
         while changed:
@@ -309,10 +309,10 @@ class AadmTransformer:
 
     # valid tosca types
     valid_tosca_types = [
-        "artifact_types", "capability_types" , "data_types", "group_types", 
+        "artifact_types", "capability_types" , "data_types", "group_types",
         "interface_types", "node_types", "policy_types", "relationship_types",
     ]
-    
+
     #set types
     @staticmethod
     def transform_type(data, context):
@@ -330,7 +330,7 @@ class AadmTransformer:
             if "req_cap" in data:
                 if isinstance(data["req_cap"], list):
                     result.append(data["req_cap"][0])
-                else:    
+                else:
                     result.append(data["req_cap"])
             if "property" in data:
                 result.append(data["property"])
@@ -362,7 +362,7 @@ class AadmTransformer:
                 if isinstance(transformation, tuple):
                     result[transformation[0]] = transformation[1]
                 elif transformation is not None:
-                    result[key] = transformation   
+                    result[key] = transformation
 
             return result
         return data
@@ -380,16 +380,16 @@ class AadmTransformer:
         # extract execution nodes
         for key, value in result["node_templates"].items():
             reqs = value.get("requirements", [])
-            
+
             # determine an execution node from the list of requirements
             reqs_names = [
                 req_name
-                for req in reqs 
+                for req in reqs
                 for req_name in req.keys()
             ]
             if not all(exec_req in reqs_names for exec_req in ModakConfig.exec_node_requirements):
                 continue
-            
+
             for req in reqs:
                 app_req = req.get("application", "")
                 if isinstance(app_req, dict):
@@ -443,17 +443,24 @@ class AadmTransformer:
     def transform_aadm(cls, aadm):
         result = {
              "tosca_definitions_version": "tosca_simple_yaml_1_3",
+             "inputs": {},
              "node_types": {},
              "node_templates": {},
-             "input": {}
+             "outputs": {}
              }
-        top_key = None
+        input_key = None
+        output_key = None
         for key, value in aadm.items():
-            
-            if "topology_template_inputs" in key:                
-                section = "input"
+
+            if "topology_template_inputs" in key:
+                section = "inputs"
                 value = value["inputs"]
-                top_key = AadmPreprocessor.get_url(key)
+                input_key = AadmPreprocessor.get_url(key)
+
+            elif "topology_template_outputs" in key:
+                section = "outputs"
+                value = value["outputs"]
+                output_key = AadmPreprocessor.get_url(key)
 
             elif "isNodeTemplate" in value:
                 if value["isNodeTemplate"]:
@@ -476,11 +483,14 @@ class AadmTransformer:
         cls.transform_optimization(result)
 
         result["topology_template"] = {}
-        if top_key:
-            result["topology_template"]["inputs"] = result["input"][top_key]
-        result["topology_template"]["node_templates"] = result["node_templates"]        
+        if input_key:
+            result["topology_template"]["inputs"] = result["inputs"][input_key]
+        result["topology_template"]["node_templates"] = result["node_templates"]
+        if output_key:
+            result["topology_template"]["outputs"] = result["outputs"][output_key]
         del result["node_templates"]
-        del result["input"]
+        del result["inputs"]
+        del result["outputs"]
         return result
 
 class ToscaDumper(yaml.SafeDumper):
@@ -509,6 +519,14 @@ class ToscaDumper(yaml.SafeDumper):
                 if isinstance(value, CollectionNode):
                     value.flow_style = True
 
+        # output outputs in json-like format
+        if isinstance(index, ScalarNode) and index.value == "outputs":
+            for _, output in node.value:
+                if isinstance(output, MappingNode):
+                    for _, clause in output.value:
+                        if isinstance(clause, CollectionNode):
+                            clause.flow_style = True
+
         # output inputs in json-like format
         if (isinstance(index, ScalarNode)
                 and index.value in ["properties", "attributes"]):
@@ -517,7 +535,7 @@ class ToscaDumper(yaml.SafeDumper):
                         and ("get_input" in str(value.value)
                              or "get_attribute" in str(value.value)
                              or "get_property" in str(value.value))):
-                    value.flow_style = True    
+                    value.flow_style = True
         if (isinstance(node, SequenceNode)
                 and isinstance(index, ScalarNode)
                 and index.value == "occurrences"):
@@ -535,7 +553,7 @@ def parse_data(name, data):
     # create an output file
     with open(name + ".yml", 'w+') as outfile:
         print('TOSCA generated -------')
-        yaml.dump(tosca, outfile, Dumper=ToscaDumper)        
+        yaml.dump(tosca, outfile, Dumper=ToscaDumper)
 
     return (AadmPreprocessor.ansible_urls, AadmPreprocessor.ansible_paths, AadmPreprocessor.dependency_urls, AadmPreprocessor.dependency_paths)
 
@@ -546,9 +564,9 @@ def read(path):
 
 def main():
     json_aadm = json.loads(read("test/fixture.json"))
-    parse_data("test/outputs/fixt", json_aadm)  
+    parse_data("test/outputs/fixt", json_aadm)
 
 if __name__ == "__main__":
     main()
 
-'''    
+'''
