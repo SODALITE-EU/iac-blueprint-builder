@@ -170,6 +170,20 @@ class AadmPreprocessor:
             return True, key, data
         return False, key, data
 
+
+    # type references in valid_source_types should be shortened
+    @classmethod
+    def reduce_valid_source_types(cls, key, data):
+        if isinstance(data, list) and key == "valid_source_types":
+            result = []
+            changed = False
+            for value in data:
+                new_value = cls.get_url(value)
+                changed = (new_value != value) or changed
+                result.append(new_value)
+            return changed, key, result
+        return False, key, data
+
     #formatting dependencies path and url
     @classmethod
     def dep_path_url(cls, key, data):
@@ -259,7 +273,8 @@ class AadmPreprocessor:
             cls.reduce_type,
             cls.dep_path_url,
             cls.pri_path_url,
-            cls.convert_str
+            cls.convert_str,
+            cls.reduce_valid_source_types
             ]
 
         changed = False
