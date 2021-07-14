@@ -87,12 +87,15 @@ def parse():
         ansible_tuple = parse_data(outpath, body["data"])
     except Exception as e:
         return f"IaC Builder AADM parsing error {e}", 500
-    print('Downloading Ansible files ---------')
-    download_dependencies(ansible_tuple[0], ansible_tuple[1], workpath)
-    print('Ansible files done ------- ')
-    print('Downloading Dependencies ---------')
-    download_dependencies(ansible_tuple[2], ansible_tuple[3], workpath)
-    print('Dependencies are done loading ------- ')
+    try:
+        print('Downloading Ansible files ---------')
+        download_dependencies(ansible_tuple[0], ansible_tuple[1], workpath)
+        print('Ansible files done ------- ')
+        print('Downloading Dependencies ---------')
+        download_dependencies(ansible_tuple[2], ansible_tuple[3], workpath)
+        print('Dependencies are done loading ------- ')
+    except Exception as e:
+        return f"IaC Builder file download error {e}", 500
     print('blueprint2CSAR ongoing ------- ')
     files = prepare_files(body["name"], outpath)
     blueprint_name = body.get("blueprint_name", None)
@@ -173,12 +176,14 @@ def download_dependencies(urls, filenames, workpath):
     # TODO add access_token for download requests
     for url, filename in zip(urls, filenames):
         print('Reading   %s ------- ' % url)
+        contents_request = requests.get(url)
+        contents_request.raise_for_status()
         temp = str(filename).split('/')
         foldername = os.path.join(workpath, *temp[:-1])
         if not os.path.exists(foldername):
             os.makedirs(foldername)
         outfile = open(os.path.join(workpath, filename), "w")
-        outfile.write(str(requests.get(url).text))
+        outfile.write(str(contents_request.text))
         outfile.close()
 
 '''
