@@ -23,7 +23,7 @@ class XoperaConfig:
             try:
                 cls.config = json.load(cls.config_path.open())
             except:
-                cls.config = {}    
+                cls.config = {}
 
     @classmethod
     def get_xopera_endpoint(cls):
@@ -58,7 +58,7 @@ class XoperaConfig:
     def get_xopera_api_key_header(cls):
         cls.init()
         api_key_header = os.getenv("XOPERA_API_KEY_HEADER", cls.config.get("XOPERA_API_KEY_HEADER", "X-API-Key"))
-        return api_key_header       
+        return api_key_header
 
 csrf = CSRFProtect()
 app = Flask(__name__)
@@ -86,7 +86,7 @@ def parse():
     try:
         ansible_tuple = parse_data(outpath, body["data"])
     except Exception as e:
-        return f"IaC Builder AADM parsing error {e}", 500        
+        return f"IaC Builder AADM parsing error {e}", 500
     print('Downloading Ansible files ---------')
     download_dependencies(ansible_tuple[0], ansible_tuple[1], workpath)
     print('Ansible files done ------- ')
@@ -94,8 +94,10 @@ def parse():
     download_dependencies(ansible_tuple[2], ansible_tuple[3], workpath)
     print('Dependencies are done loading ------- ')
     print('blueprint2CSAR ongoing ------- ')
-    files = prepare_files(body["name"], outpath)    
-    return send_xopera_request(files, body["data"])
+    files = prepare_files(body["name"], outpath)
+    blueprint_name = body.get("blueprint_name", None)
+    username = body.get("username", None)
+    return send_xopera_request(files, body["data"], blueprint_name, username)
 
 
 def prepare_files(name, outpath):
@@ -104,7 +106,7 @@ def prepare_files(name, outpath):
     return [('CSAR', open('%s.zip' % (outpath,), 'rb'))]
 
 
-def send_xopera_request(files, aadm_json):
+def send_xopera_request(files, aadm_json, blueprint_name=None, username=None):
     token = get_access_token(request)
     api_key = get_api_key(request)
     if token:
@@ -112,27 +114,39 @@ def send_xopera_request(files, aadm_json):
     elif api_key:
         headers = {XoperaConfig.get_xopera_api_key_header(): api_key}
     else:
-        headers = None      
+        headers = None
 
-    params = {"project_domain": get_project_domain(aadm_json)}
+    params = {
+        "project_domain": get_project_domain(aadm_json),
+        "aadm_id": get_aadm_id(aadm_json),
+        "blueprint_name": blueprint_name,
+        "username": username
+        }
 
     try:
-        response = requests.post(XoperaConfig.get_xopera_api(), 
+        response = requests.post(XoperaConfig.get_xopera_api(),
                                 files=files,
                                 params=params,
                                 headers=headers,
                                 verify=True)
-                                
+
         return json.loads(response.text), response.status_code
     except ConnectionError as e:
-        return f"IaC Builder Connection error to {XoperaConfig.get_xopera_api()}", 500    
+        return f"IaC Builder Connection error to {XoperaConfig.get_xopera_api()}", 500
 
 
 def get_project_domain(json):
     for node in json.values():
-        if isinstance(node, dict) and node.get("type") == AADM_TYPE and node.get("namespace"):
+        if isinstance(node, dict) and node.get("type") == AADM_TYPE and "namespace" in node:
             return node.get("namespace")
-    return None            
+    return None
+
+
+def get_aadm_id(json):
+    for node in json.values():
+        if isinstance(node, dict) and node.get("type") == AADM_TYPE and "id" in node:
+            return node.get("id")
+    return None
 
 
 def get_access_token(request):
@@ -152,7 +166,7 @@ def get_api_key(request):
     api_key = request.headers.get(XoperaConfig.get_xopera_api_key_header())
     if not api_key:
         return None
-    return api_key    
+    return api_key
 
 
 def download_dependencies(urls, filenames, workpath):
