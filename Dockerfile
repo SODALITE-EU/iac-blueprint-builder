@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.9.5
 ADD . /parser
 WORKDIR /parser
 RUN pip3 install -r requirements.txt
