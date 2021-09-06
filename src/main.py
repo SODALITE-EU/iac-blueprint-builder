@@ -3,6 +3,7 @@ import os
 import uuid
 import pathlib
 import requests
+import base64
 
 from requests.exceptions import ConnectionError
 from flask import Flask, request
@@ -183,8 +184,21 @@ def download_dependencies(urls, filenames, workpath):
         if not os.path.exists(foldername):
             os.makedirs(foldername)
         outfile = open(os.path.join(workpath, filename), "w")
-        outfile.write(str(contents_request.text))
+        outfile.write(str(try_decode_base64(contents_request.text)))
         outfile.close()
+
+
+def try_decode_base64(content):
+    try:
+        if isinstance(content, str):
+            sb_bytes = bytes(content, 'ascii')
+        else:
+            raise ValueError("Argument must be string")
+        if base64.b64encode(base64.b64decode(sb_bytes)) == sb_bytes:
+           return base64.b64decode(sb_bytes).decode("utf-8")
+        return content
+    except Exception:
+        return content
 
 '''
 if __name__ == '__main__':
