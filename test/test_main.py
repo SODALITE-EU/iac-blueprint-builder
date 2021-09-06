@@ -1,6 +1,6 @@
 import pytest
 
-from src.main import get_access_token, get_api_key, get_project_domain, XoperaConfig
+from src.main import get_access_token, get_api_key, get_project_domain, XoperaConfig, try_decode_base64
 
 
 class TestMain:
@@ -35,16 +35,26 @@ class TestMain:
         mock.headers = {"Authorization": "TEST_KEY"}
         token = get_api_key(mock)
         assert token == None
- 
+
     def test_get_project_domain(self, mocker):
-        json_aadm = { "test": "test", "test2": {"type": "AbstractApplicationDeploymentModel", "namespace": "test"} }      
+        json_aadm = { "test": "test", "test2": {"type": "AbstractApplicationDeploymentModel", "namespace": "test"} }
         domain = get_project_domain(json_aadm)
         assert domain == "test"
 
-        json_aadm = { "test": "test", "test2": {"namespace": "test"} }      
+        json_aadm = { "test": "test", "test2": {"namespace": "test"} }
         domain = get_project_domain(json_aadm)
         assert domain == None
 
-        json_aadm = { "test": "test" }      
+        json_aadm = { "test": "test" }
         domain = get_project_domain(json_aadm)
-        assert domain == None          
+        assert domain == None
+
+
+    def test_decode_base64(self, mocker):
+        encoded = "VEVTVA=="
+        decoded = try_decode_base64(encoded)
+        assert decoded == "TEST"
+
+        not_encoded = "TEST"
+        not_decoded = try_decode_base64(not_encoded)
+        assert not_decoded == "TEST"
