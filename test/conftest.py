@@ -73,3 +73,24 @@ def get_workdir_path():
     os.makedirs(workdir_path)
     yield workdir_path
     shutil.rmtree(workdir_path)
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--online", action="store_true", default=False,
+        help="run tests requiring online services to be available (may need additional configuration)"
+    )
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "online: mark test as requiring an online service")
+
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--online"):
+        return
+
+    skip_online = pytest.mark.skip(reason="need --online option to run")
+    for item in items:
+        if "online" in item.keywords:
+            item.add_marker(skip_online)
