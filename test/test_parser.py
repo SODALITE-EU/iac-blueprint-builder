@@ -152,8 +152,8 @@ def test_node_template_details(json_in,yaml_out):
                         if isinstance(value_pro, dict) and "value" in value_pro.keys() and "label" in value_pro.keys():
                             node_pro = node_out.get("properties").get(value_pro["label"])
                             if isinstance(node_pro, dict):
-                                key_v = re.search('{\s(.+?):', value_pro["value"]).group(1)
-                                value_v = re.search(':\s(.+?)\s}', value_pro["value"]).group(1)
+                                key_v = re.search(r'{\s(.+?):', value_pro["value"]).group(1)
+                                value_v = re.search(r':\s(.+?)\s}', value_pro["value"]).group(1)
                                 assert key_v in node_pro.keys() and value_v in node_pro.values(),"properties error with label and value"
                                 pass #later
                             elif isinstance(node_pro, list):
@@ -277,9 +277,8 @@ def mock_modak_get_opt_job_content(app, target, job_options, opt_json_string):
         request_gpus=job_options.get("request_gpus"), core_count=job_options.get("core_count"))
 
 
-def test_parser_opt(mocker):
-
-    mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
+@pytest.mark.online
+def test_parser_opt():
 
     # this component has optimisation field
     opt_component = "optimization-skyline-extractor"
@@ -308,10 +307,15 @@ def test_parser_opt(mocker):
     assert not "optimization" in opt_not_found_component_template
     assert image_name == opt_not_found_expected_container_runtime
 
-def test_parser_opt_job(mocker):
+
+def test_parser_opt_offline(mocker):
 
     mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
-    mocker.patch('src.iacparser.ModakConfig.get_opt_job_content', new=mock_modak_get_opt_job_content)
+    test_parser_opt()
+
+
+@pytest.mark.online
+def test_parser_opt_job():
 
     # this component has optimisation field
     opt_component = "batch-app"
@@ -342,10 +346,16 @@ def test_parser_opt_job(mocker):
     assert "#PBS -l nodes=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
 
-def test_parser_no_opt_job(mocker):
+
+def test_parser_opt_job_offline(mocker):
 
     mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
     mocker.patch('src.iacparser.ModakConfig.get_opt_job_content', new=mock_modak_get_opt_job_content)
+    test_parser_opt_job()
+
+
+@pytest.mark.online
+def test_parser_no_opt_job():
 
     # this component has optimisation field
     no_opt_component = "no-opt-batch-app"
@@ -375,6 +385,14 @@ def test_parser_no_opt_job(mocker):
     assert "#PBS -q ssd" in content
     assert "#PBS -l nodes=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
+
+
+def test_parser_no_opt_job_offline(mocker):
+
+    mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
+    mocker.patch('src.iacparser.ModakConfig.get_opt_job_content', new=mock_modak_get_opt_job_content)
+    test_parser_no_opt_job()
+
 
 def test_parser_tosca_capabilities():
 

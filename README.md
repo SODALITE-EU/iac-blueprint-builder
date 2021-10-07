@@ -32,6 +32,10 @@ All the requirements are stated in "requirements.txt".
 2. Run tests
    `pytest`
 
+*Note*: some tests require online services to be available (like the MODAK component) and are skipped by default.
+Use `pytest --online` to include those tests in the test run.
+Currently all of the online tests are also available as mocked tests (meaning they use pre-recorderd replies, for example to verify the parser).
+
 ## Docker
 
 Currently the container is accessible from:
