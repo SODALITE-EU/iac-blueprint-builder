@@ -92,7 +92,7 @@ class AadmPreprocessor:
     # regex to check if string is URL
     url_regex = r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"
     # list of keys to convert
-    convert_list_dict = ["properties", "attributes", "interfaces", "capabilities", "inputs", "outputs"]
+    convert_list_dict = ["properties", "attributes", "interfaces", "capabilities", "inputs", "outputs", "artifacts"]
     convert_dict_list = ["constraints"]
 
     #path and urls
@@ -203,6 +203,26 @@ class AadmPreprocessor:
             return True, key, dep_path
         return False, key, data
 
+    #formatting artifacts path and url
+    @classmethod
+    def art_path_url(cls, key, data):
+        if key == "artifacts":
+            changed = False
+            for _, art_value in data.items():
+                if "file" in art_value:
+                    continue
+                path_list = cls.get_path(art_value["path"])
+                path = '{}/{}'.format(path_list[0],path_list[1])
+                if path not in cls.dependency_paths:
+                    changed = True
+                    cls.dependency_urls.append(art_value["url"])
+                    cls.dependency_paths.append(path)
+                art_value["file"] = path
+                del art_value["path"]
+                del art_value["url"]
+            return changed, key, data
+        return False, key, data
+
     #formatting primary path and url
     @classmethod
     def pri_path_url(cls, key, data):
@@ -273,6 +293,7 @@ class AadmPreprocessor:
             cls.reduce_type,
             cls.dep_path_url,
             cls.pri_path_url,
+            cls.art_path_url,
             cls.convert_str,
             cls.reduce_valid_source_types
             ]
