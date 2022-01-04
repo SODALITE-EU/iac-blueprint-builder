@@ -27,7 +27,7 @@ class TestConfig:
         return self.test_path.with_suffix(self.YAML_SUFFIX)
 
     def service(self):
-        return yaml.load(self.yaml_path().open())
+        return yaml.safe_load(self.yaml_path().open())
 
 #return a new class TestConfig
 @pytest.fixture
@@ -49,45 +49,45 @@ def yaml_out(test_fixture):
 
 def test_artifacts_extraction():
     # expected ansible_files, expected ansible_paths, expected dependency_files, expected dependency_paths
-    expected = (['http://160.40.52.200:8084/Ansibles/ddce9b4f-7eef-46b9-b3d6-80f58eb5bb84', 
-                'http://160.40.52.200:8084/Ansibles/3b95de8b-4815-4f00-9ee4-cedf49df4afb', 
-                'http://160.40.52.200:8084/Ansibles/b8812f8a-7e1d-4acb-9258-45a5bdb45af2', 
-                'http://160.40.52.200:8084/Ansibles/454ab4e5-43f2-479a-b31a-619596e0a696', 
-                'http://160.40.52.200:8084/Ansibles/0ed0c21b-5614-48cf-82bc-cf7db4369f5b', 
-                'http://160.40.52.200:8084/Ansibles/85767023-d35f-49bc-90c0-e79fe21351eb', 
-                'http://160.40.52.200:8084/Ansibles/2a1e0e73-bcb8-4e6c-9c0d-0580cc5495b5', 
-                'http://160.40.52.200:8084/Ansibles/85578876-343f-4e5b-ba1e-b1abfab8f6d3', 
-                'http://160.40.52.200:8084/Ansibles/4250caa5-0a7d-42c1-98ae-92bb3d0dc82f', 
-                'http://160.40.52.200:8084/Ansibles/7d35630c-fd17-45d6-9ccd-3c373ee0ee91', 
-                'http://160.40.52.200:8084/Ansibles/15dbb35b-d70f-4458-a7c2-47fd39240fee', 
-                'http://160.40.52.200:8084/Ansibles/d1e603eb-1261-4d73-90b9-683d3fd7d301', 
-                'http://160.40.52.200:8084/Ansibles/67830dce-dabd-447f-81ab-9d2b57615331', 
-                'http://160.40.52.200:8084/Ansibles/55f5be63-2220-4e62-9b6d-c15b69f82e9e', 
-                'http://160.40.52.200:8084/Ansibles/88943b50-fdd9-4d5e-b72a-5fca96baaf27', 
-                'http://160.40.52.200:8084/Ansibles/31f26aa0-cb6a-446c-b6c2-9c5e846b10e4', 
+    expected = (['http://160.40.52.200:8084/Ansibles/ddce9b4f-7eef-46b9-b3d6-80f58eb5bb84',
+                'http://160.40.52.200:8084/Ansibles/3b95de8b-4815-4f00-9ee4-cedf49df4afb',
+                'http://160.40.52.200:8084/Ansibles/b8812f8a-7e1d-4acb-9258-45a5bdb45af2',
+                'http://160.40.52.200:8084/Ansibles/454ab4e5-43f2-479a-b31a-619596e0a696',
+                'http://160.40.52.200:8084/Ansibles/0ed0c21b-5614-48cf-82bc-cf7db4369f5b',
+                'http://160.40.52.200:8084/Ansibles/85767023-d35f-49bc-90c0-e79fe21351eb',
+                'http://160.40.52.200:8084/Ansibles/2a1e0e73-bcb8-4e6c-9c0d-0580cc5495b5',
+                'http://160.40.52.200:8084/Ansibles/85578876-343f-4e5b-ba1e-b1abfab8f6d3',
+                'http://160.40.52.200:8084/Ansibles/4250caa5-0a7d-42c1-98ae-92bb3d0dc82f',
+                'http://160.40.52.200:8084/Ansibles/7d35630c-fd17-45d6-9ccd-3c373ee0ee91',
+                'http://160.40.52.200:8084/Ansibles/15dbb35b-d70f-4458-a7c2-47fd39240fee',
+                'http://160.40.52.200:8084/Ansibles/d1e603eb-1261-4d73-90b9-683d3fd7d301',
+                'http://160.40.52.200:8084/Ansibles/67830dce-dabd-447f-81ab-9d2b57615331',
+                'http://160.40.52.200:8084/Ansibles/55f5be63-2220-4e62-9b6d-c15b69f82e9e',
+                'http://160.40.52.200:8084/Ansibles/88943b50-fdd9-4d5e-b72a-5fca96baaf27',
+                'http://160.40.52.200:8084/Ansibles/31f26aa0-cb6a-446c-b6c2-9c5e846b10e4',
                 'http://160.40.52.200:8084/Ansibles/0fc36efb-5153-49d5-9074-ed7fc66b88a4'],
 
-                ['playbooks/ddce9b4f-7eef-46b9-b3d6-80f58eb5bb84_remove_network.yml', 
-                'playbooks/3b95de8b-4815-4f00-9ee4-cedf49df4afb_add_network.yml', 
-                'playbooks/b8812f8a-7e1d-4acb-9258-45a5bdb45af2_remove_container.yml', 
-                'playbooks/454ab4e5-43f2-479a-b31a-619596e0a696_add_container.yml', 
-                'playbooks/0ed0c21b-5614-48cf-82bc-cf7db4369f5b_remove_cert.yml', 
-                'playbooks/85767023-d35f-49bc-90c0-e79fe21351eb_remove_volume.yml', 
-                'playbooks/2a1e0e73-bcb8-4e6c-9c0d-0580cc5495b5_add_volume.yml', 
-                'playbooks/85578876-343f-4e5b-ba1e-b1abfab8f6d3_create_docker_host.yml', 
-                'playbooks/4250caa5-0a7d-42c1-98ae-92bb3d0dc82f_delete_docker_host.yml', 
-                'playbooks/7d35630c-fd17-45d6-9ccd-3c373ee0ee91_login_user.yml', 
-                'playbooks/15dbb35b-d70f-4458-a7c2-47fd39240fee_logout_user.yml', 
-                'playbooks/d1e603eb-1261-4d73-90b9-683d3fd7d301_add_cert.yml', 
-                'playbooks/67830dce-dabd-447f-81ab-9d2b57615331_security_rule_delete.yml', 
-                'playbooks/55f5be63-2220-4e62-9b6d-c15b69f82e9e_security_rule_create.yml', 
-                'playbooks/88943b50-fdd9-4d5e-b72a-5fca96baaf27_vm_create.yml', 
-                'playbooks/31f26aa0-cb6a-446c-b6c2-9c5e846b10e4_vm_delete.yml', 
+                ['playbooks/ddce9b4f-7eef-46b9-b3d6-80f58eb5bb84_remove_network.yml',
+                'playbooks/3b95de8b-4815-4f00-9ee4-cedf49df4afb_add_network.yml',
+                'playbooks/b8812f8a-7e1d-4acb-9258-45a5bdb45af2_remove_container.yml',
+                'playbooks/454ab4e5-43f2-479a-b31a-619596e0a696_add_container.yml',
+                'playbooks/0ed0c21b-5614-48cf-82bc-cf7db4369f5b_remove_cert.yml',
+                'playbooks/85767023-d35f-49bc-90c0-e79fe21351eb_remove_volume.yml',
+                'playbooks/2a1e0e73-bcb8-4e6c-9c0d-0580cc5495b5_add_volume.yml',
+                'playbooks/85578876-343f-4e5b-ba1e-b1abfab8f6d3_create_docker_host.yml',
+                'playbooks/4250caa5-0a7d-42c1-98ae-92bb3d0dc82f_delete_docker_host.yml',
+                'playbooks/7d35630c-fd17-45d6-9ccd-3c373ee0ee91_login_user.yml',
+                'playbooks/15dbb35b-d70f-4458-a7c2-47fd39240fee_logout_user.yml',
+                'playbooks/d1e603eb-1261-4d73-90b9-683d3fd7d301_add_cert.yml',
+                'playbooks/67830dce-dabd-447f-81ab-9d2b57615331_security_rule_delete.yml',
+                'playbooks/55f5be63-2220-4e62-9b6d-c15b69f82e9e_security_rule_create.yml',
+                'playbooks/88943b50-fdd9-4d5e-b72a-5fca96baaf27_vm_create.yml',
+                'playbooks/31f26aa0-cb6a-446c-b6c2-9c5e846b10e4_vm_delete.yml',
                 'playbooks/0fc36efb-5153-49d5-9074-ed7fc66b88a4_configure_demo.yml'],
 
-                ['http://160.40.52.200:8084/Ansibles/fde69a72-7375-4fef-adc7-e941cb985eec', 
-                'http://160.40.52.200:8084/Ansibles/d6f34eaa-25cf-40fb-a31a-da244c0c9d37', 
-                'http://160.40.52.200:8084/Ansibles/b8ad4903-01db-4433-8eaa-cbff67edee9b', 
+                ['http://160.40.52.200:8084/Ansibles/fde69a72-7375-4fef-adc7-e941cb985eec',
+                'http://160.40.52.200:8084/Ansibles/d6f34eaa-25cf-40fb-a31a-da244c0c9d37',
+                'http://160.40.52.200:8084/Ansibles/b8ad4903-01db-4433-8eaa-cbff67edee9b',
                 'http://160.40.52.200:8084/Ansibles/2dd0cacf-014c-4c08-a211-d222e41d3c21'],
 
                 ['artifacts/ca.key',
@@ -134,7 +134,7 @@ def test_node_types_list(json_in, yaml_out):
         if key.find('sodalite.nodes.') == 0:
             assert key in node_type
 
-#checking the detail information in node_templates for fields: 
+#checking the detail information in node_templates for fields:
 #   type, properties, requirement
 def test_node_template_details(json_in,yaml_out):
     node_temp = yaml_out.get("topology_template").get("node_templates")
@@ -180,11 +180,11 @@ def test_topology_template_inputs(json_in,yaml_out):
             inputs_in = value["inputs"]
     for element in inputs_in:
         for key, value in element.items():
-            if "https://" in key: 
+            if "https://" in key:
                 key = remove_link(key)
                 assert inputs_out.get(key).get("type") == value["specification"]["type"], "input type not correct"
 
-#checking node types details for: 
+#checking node types details for:
 #   type/derived_from, properties(description, required, type)
 #   attributes(description, specification), requirements, capabilities
 def test_node_types_detail(json_in, yaml_out):
@@ -194,7 +194,7 @@ def test_node_types_detail(json_in, yaml_out):
         if key.find('sodalite.nodes.') == 0:
             node = node_type.get(key)
             #derived from:
-            if "type" in value.keys() and "https://" in value["type"]: 
+            if "type" in value.keys() and "https://" in value["type"]:
                 type_in = remove_link(value["type"])
                 assert node.get("derived_from") == type_in, "node type derived_from error"
             if "properties" in value.keys():
@@ -249,14 +249,14 @@ def test_node_types_detail(json_in, yaml_out):
 
 
 
-                                    
+
 
 
 
 
 #helper funciton to extract info from links
 def remove_link(link):
-    return link[link.rfind('/')+1:]        
+    return link[link.rfind('/')+1:]
 
 
 def mock_modak_get_opt_image(opt_json_string: str):
@@ -273,7 +273,7 @@ def mock_modak_get_opt_job_content(app, target, job_options, opt_json_string):
     #PBS -l nodes={node_count}:gpus={request_gpus}:{queue}
     #PBS -l procs={core_count}
     """.format(
-        app_tag=app.get("app_tag"), queue=job_options.get("queue"), node_count=job_options.get("node_count"), 
+        app_tag=app.get("app_tag"), queue=job_options.get("queue"), node_count=job_options.get("node_count"),
         request_gpus=job_options.get("request_gpus"), core_count=job_options.get("core_count"))
 
 
