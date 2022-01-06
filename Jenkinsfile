@@ -9,7 +9,7 @@ pipeline {
         flavor_name = "m1.medium"
         // DOCKER SETTINGS
         docker_network = "sodalite"
-        docker_registry_ip = credentials('jenkins-docker-registry-ip')
+        //docker_registry_ip = credentials('jenkins-docker-registry-ip')
         docker_public_registry_url = "registry.hub.docker.com"
         xopera_endpoint = credentials('xopera-http-endpoint')
 
