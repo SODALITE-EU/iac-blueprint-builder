@@ -9,7 +9,7 @@ pipeline {
         flavor_name = "m1.medium"
         // DOCKER SETTINGS
         docker_network = "sodalite"
-        docker_registry_ip = credentials('jenkins-docker-registry-ip')
+        //docker_registry_ip = credentials('jenkins-docker-registry-ip')
         docker_public_registry_url = "registry.hub.docker.com"
         xopera_endpoint = credentials('xopera-http-endpoint')
 
@@ -108,20 +108,19 @@ pipeline {
                     """
             }
         }
-        stage('Push iac-blueprint-builder to sodalite-private-registry') {
-            // Push during staging and production
+        stage('Push iac-blueprint-builder to DockerHub for staging') {
             when {
                 allOf {
                     expression{tag "*"}
                     expression{
-                        TAG_STAGING == 'true' || TAG_PRODUCTION == 'true'
+                        TAG_STAGING == 'true'
                     }
                 }
             }
             steps {
                 withDockerRegistry(credentialsId: 'jenkins-sodalite.docker_token', url: '') {
                     sh  """#!/bin/bash
-                        ./make_docker.sh push iac-blueprint-builder staging
+                        ./make_docker.sh push iac-blueprint-builder sodaliteh2020 staging
                         """
                 }
             }
@@ -139,7 +138,7 @@ pipeline {
             steps {
                 withDockerRegistry(credentialsId: 'jenkins-sodalite.docker_token', url: '') {
                     sh  """#!/bin/bash
-                            ./make_docker.sh push iac-blueprint-builder production
+                            ./make_docker.sh push iac-blueprint-builder sodaliteh2020 production
                         """
                 }
             }
