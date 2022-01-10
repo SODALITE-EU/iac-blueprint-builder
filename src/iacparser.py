@@ -174,7 +174,7 @@ class AadmPreprocessor:
     # type references in valid_source_types should be shortened
     @classmethod
     def reduce_valid_source_types(cls, key, data):
-        if isinstance(data, list) and key == "valid_source_types":
+        if isinstance(data, list) and key in ["valid_source_types", "valid_target_types"]:
             result = []
             changed = False
             for value in data:
