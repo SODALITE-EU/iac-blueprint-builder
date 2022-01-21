@@ -2,7 +2,10 @@ import json
 import yaml
 import re
 import pytest
+import os
+import requests
 from pathlib import Path
+from unittest import mock
 
 import src.iacparser as parser
 
@@ -114,6 +117,25 @@ def test_artifacts_extraction():
         exs.append(expected[i])
     assert exs == pds
 
+def test_tosca_artifacts():
+    expected = ([], [],
+
+                ['http://160.40.52.200:8080/Ansibles/dc9d6683-47c9-47d0-a266-7bcf346ef2ae',
+                 'http://160.40.52.200:8080/Ansibles/137006d0-b3c7-438a-b81d-3755f3894f8f'],
+
+                ['sodalite/ConHTTPJsonList_Local.xml',
+                 'sodalite/PubS3Bucket_Local.xml'])
+
+    test = TestConfig("fixture", "test/artifacts.json")
+
+    parsed_data = parser.parse_data(test.parser_dest(), test.fixture())
+    pds = []
+    exs = []
+    for i in range(0, 3):
+        pds.append(parsed_data[i])
+        exs.append(expected[i])
+    assert exs == pds
+
 #checking if the output file is sucssesful generated
 def test_output_path(test_fixture):
     assert Path.exists(test_fixture.yaml_path()),"output yaml not found"
@@ -152,8 +174,8 @@ def test_node_template_details(json_in,yaml_out):
                         if isinstance(value_pro, dict) and "value" in value_pro.keys() and "label" in value_pro.keys():
                             node_pro = node_out.get("properties").get(value_pro["label"])
                             if isinstance(node_pro, dict):
-                                key_v = re.search('{\s(.+?):', value_pro["value"]).group(1)
-                                value_v = re.search(':\s(.+?)\s}', value_pro["value"]).group(1)
+                                key_v = re.search(r'{\s(.+?):', value_pro["value"]).group(1)
+                                value_v = re.search(r':\s(.+?)\s}', value_pro["value"]).group(1)
                                 assert key_v in node_pro.keys() and value_v in node_pro.values(),"properties error with label and value"
                                 pass #later
                             elif isinstance(node_pro, list):
@@ -277,9 +299,8 @@ def mock_modak_get_opt_job_content(app, target, job_options, opt_json_string):
         request_gpus=job_options.get("request_gpus"), core_count=job_options.get("core_count"))
 
 
-def test_parser_opt(mocker):
-
-    mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
+@pytest.mark.online
+def test_parser_opt():
 
     # this component has optimisation field
     opt_component = "optimization-skyline-extractor"
@@ -308,10 +329,15 @@ def test_parser_opt(mocker):
     assert not "optimization" in opt_not_found_component_template
     assert image_name == opt_not_found_expected_container_runtime
 
-def test_parser_opt_job(mocker):
+
+def test_parser_opt_offline(mocker):
 
     mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
-    mocker.patch('src.iacparser.ModakConfig.get_opt_job_content', new=mock_modak_get_opt_job_content)
+    test_parser_opt()
+
+
+@pytest.mark.online
+def test_parser_opt_job():
 
     # this component has optimisation field
     opt_component = "batch-app"
@@ -342,10 +368,16 @@ def test_parser_opt_job(mocker):
     assert "#PBS -l nodes=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
 
-def test_parser_no_opt_job(mocker):
+
+def test_parser_opt_job_offline(mocker):
 
     mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
     mocker.patch('src.iacparser.ModakConfig.get_opt_job_content', new=mock_modak_get_opt_job_content)
+    test_parser_opt_job()
+
+
+@pytest.mark.online
+def test_parser_no_opt_job():
 
     # this component has optimisation field
     no_opt_component = "no-opt-batch-app"
@@ -376,6 +408,14 @@ def test_parser_no_opt_job(mocker):
     assert "#PBS -l nodes=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
 
+
+def test_parser_no_opt_job_offline(mocker):
+
+    mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
+    mocker.patch('src.iacparser.ModakConfig.get_opt_job_content', new=mock_modak_get_opt_job_content)
+    test_parser_no_opt_job()
+
+
 def test_parser_tosca_capabilities():
 
     test = TestConfig("capabilities", "test/mixed_tosca_types_fixture.json")
@@ -402,3 +442,79 @@ def test_parser_class_removal_from_tosca_types():
     assert service.get("capability_types").get("sodalite.capabilities.WM.JobResources").get("class") == None
     assert service.get("capability_types").get("sodalite.capabilities.OptimisedTarget").get("class") == None
     assert service.get("node_types").get("sodalite.nodes.hpc.WM").get("class") == None
+
+
+def test_modak_config_init():
+    assert parser.ModakConfig.config == None
+    parser.ModakConfig.init()
+    assert type(parser.ModakConfig.config) == dict
+
+def test_modak_config_get_modak_endpoint():
+    test_endpoint = "http://localhost:4567"
+    with mock.patch.dict(os.environ, {"MODAK_ENDPOINT": test_endpoint}):
+        assert parser.ModakConfig.get_modak_endpoint() == test_endpoint
+
+def test_modak_config_get_modak_api_image():
+    test_endpoint = "http://localhost:4567"
+    test_api_image_path = "/image"
+    with mock.patch.dict(os.environ, {"MODAK_ENDPOINT": test_endpoint, "MODAK_API_IMAGE": test_api_image_path}):
+        assert parser.ModakConfig.get_modak_api_image() == (test_endpoint + test_api_image_path)
+
+def test_modak_config_get_modak_api_job():
+    test_endpoint = "http://localhost:4567"
+    test_api_job_path = "/job"
+    with mock.patch.dict(os.environ, {"MODAK_ENDPOINT": test_endpoint, "MODAK_API_JOB": test_api_job_path}):
+        assert parser.ModakConfig.get_modak_api_job() == (test_endpoint + test_api_job_path)
+
+def test_modak_config_is_valid_image_property():
+    assert parser.ModakConfig.is_valid_image_property("image") == True
+    assert parser.ModakConfig.is_valid_image_property("image_name") == True
+    assert parser.ModakConfig.is_valid_image_property("container_runtime") == True
+    assert parser.ModakConfig.is_valid_image_property("abc") == False
+
+def mock_modak_get_opt_image_bad_response(*args, **kwargs):
+    response = requests.Response()
+    response._content = b""
+    response.status_code = 404
+    return response
+
+def mock_modak_get_opt_image_good_response(*args, **kwargs):
+    response = requests.Response()
+    response._content = '{"job":{"container_runtime":"docker://modakopt/modak:tensorflow-2.1-gpu-src"}}'.encode('ascii')
+    response.status_code = 200
+    return response
+
+def test_modak_config_get_opt_image(mocker):
+    mocker.patch('requests.post', new=mock_modak_get_opt_image_bad_response)
+    test = TestConfig("opt", "test/opt_fixture.json")
+    opt = test.fixture().get("https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-skyline-alignment").get("optimization")
+    assert parser.ModakConfig.get_opt_image(opt) == ""
+
+    mocker.patch('requests.post', new=mock_modak_get_opt_image_good_response)
+    test = TestConfig("opt", "test/opt_fixture.json")
+    opt = test.fixture().get("https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-skyline-alignment").get("optimization")
+    assert parser.ModakConfig.get_opt_image(opt) == "docker://modakopt/modak:tensorflow-2.1-gpu-src"
+
+
+def mock_modak_get_opt_job_content_bad_response(*args, **kwargs):
+    response = requests.Response()
+    response._content = b""
+    response.status_code = 404
+    return response
+
+def mock_modak_get_opt_job_content_good_response(*args, **kwargs):
+    response = requests.Response()
+    response._content = '{"job":{"job_content":"#!/bin/bash"}}'.encode('ascii')
+    response.status_code = 200
+    return response
+
+def test_modak_config_get_opt_job_content(mocker):
+    mocker.patch('requests.post', new=mock_modak_get_opt_job_content_bad_response)
+    test = TestConfig("opt", "test/opt_fixture.json")
+    opt = test.fixture().get("https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-skyline-alignment").get("optimization")
+    assert parser.ModakConfig.get_opt_job_content(app={}, target={}, job_options={}, opt_json_string=opt) == ""
+
+    mocker.patch('requests.post', new=mock_modak_get_opt_job_content_good_response)
+    test = TestConfig("opt", "test/opt_fixture.json")
+    opt = test.fixture().get("https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-skyline-alignment").get("optimization")
+    assert parser.ModakConfig.get_opt_job_content(app={}, target={}, job_options={}, opt_json_string=opt) == "#!/bin/bash"

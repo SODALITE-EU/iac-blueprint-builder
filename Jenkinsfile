@@ -12,6 +12,7 @@ pipeline {
         //docker_registry_ip = credentials('jenkins-docker-registry-ip')
         docker_public_registry_url = "registry.hub.docker.com"
         xopera_endpoint = credentials('xopera-http-endpoint')
+        modak_endpoint = "http://modak.sodalite.eu:5000"
 
         // OPENSTACK DEPLOYMENT SETTINGS
         OS_PROJECT_DOMAIN_NAME = "Default"
