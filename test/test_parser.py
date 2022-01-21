@@ -117,6 +117,25 @@ def test_artifacts_extraction():
         exs.append(expected[i])
     assert exs == pds
 
+def test_tosca_artifacts():
+    expected = ([], [],
+
+                ['http://160.40.52.200:8080/Ansibles/dc9d6683-47c9-47d0-a266-7bcf346ef2ae',
+                 'http://160.40.52.200:8080/Ansibles/137006d0-b3c7-438a-b81d-3755f3894f8f'],
+
+                ['sodalite/ConHTTPJsonList_Local.xml',
+                 'sodalite/PubS3Bucket_Local.xml'])
+
+    test = TestConfig("fixture", "test/artifacts.json")
+
+    parsed_data = parser.parse_data(test.parser_dest(), test.fixture())
+    pds = []
+    exs = []
+    for i in range(0, 3):
+        pds.append(parsed_data[i])
+        exs.append(expected[i])
+    assert exs == pds
+
 #checking if the output file is sucssesful generated
 def test_output_path(test_fixture):
     assert Path.exists(test_fixture.yaml_path()),"output yaml not found"
