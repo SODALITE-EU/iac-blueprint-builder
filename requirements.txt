@@ -10,3 +10,4 @@ flask_swagger_ui
 pytest
 pytest-mock
 pytest-cov
+wtforms>=3.0.0a1 # not directly required, pinned by Snyk to avoid a vulnerability
