@@ -1,5 +1,5 @@
 {
     "MODAK_ENDPOINT" : "http://modak.sodalite.eu:5000",
     "MODAK_API_IMAGE" : "/get_image",
-    "MODAK_API_JOB" : "/get_job_content"
+    "MODAK_API_JOB" : "/get_optimisation"
 }

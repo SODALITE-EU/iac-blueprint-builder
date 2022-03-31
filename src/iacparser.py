@@ -4,6 +4,7 @@ import re
 import os
 import requests
 import pathlib
+import copy
 
 from yaml import ScalarNode, CollectionNode, SequenceNode, MappingNode
 
@@ -16,6 +17,8 @@ class ModakConfig:
     valid_container_image_properties = ["image", "image_name", "container_runtime"]
 
     exec_node_requirements = ["application", "host", "runtime"]
+
+    redundant_job_option_properties = ["content", "workspace"]
 
     @classmethod
     def init(cls):
@@ -36,7 +39,7 @@ class ModakConfig:
     @classmethod
     def get_modak_api_job(cls):
         cls.init()
-        api_image = os.getenv("MODAK_API_JOB", cls.config.get("MODAK_API_JOB", "/get_job_content"))
+        api_image = os.getenv("MODAK_API_JOB", cls.config.get("MODAK_API_JOB", "/get_optimisation"))
         return cls.get_modak_endpoint() + api_image
 
     @classmethod
@@ -44,33 +47,50 @@ class ModakConfig:
         return property in cls.valid_container_image_properties
 
     @classmethod
-    def get_opt_image(cls, opt_json_string: str):
+    def get_opt_image(cls, app, target, job_options, opt_json_string: str):
         opt_json_string = opt_json_string.strip('\"')
         opt = json.loads(opt_json_string)
+        _job_options = copy.deepcopy(job_options)
+        for redundant in cls.redundant_job_option_properties:
+            _job_options.pop(redundant, None)
+        job_request = {
+            "application": app,
+            "target": target,
+            "job_options": _job_options,
+        }
+        if opt.get("optimization", False):
+            job_request["optimisation"] = opt.get("optimization")
         response = requests.post(
             cls.get_modak_api_image(),
-            headers= { "Content-Type": "application/json" },
-            json= { "job": { "optimisation": opt.get("optimization", {}) } })
+            headers={ "Content-Type": "application/json" },
+            json={
+                "job": job_request
+            })
         if response.status_code != 200:
             print("Optimisation request error")
             return ""
         data = response.json()
-        return data.get("job", {}).get("container_runtime", "")
+        return data.get("job", {}).get("application", {}).get("container_runtime", "")
 
     @classmethod
     def get_opt_job_content(cls, app, target, job_options, opt_json_string):
         opt_json_string = opt_json_string.strip('\"')
         opt = json.loads(opt_json_string) if opt_json_string else {}
+        _job_options = copy.deepcopy(job_options)
+        for redundant in cls.redundant_job_option_properties:
+            _job_options.pop(redundant, None)
+        job_request = {
+            "application": app,
+            "target": target,
+            "job_options": _job_options,
+        }
+        if opt.get("optimization", False):
+            job_request["optimisation"] = opt.get("optimization")
         response = requests.post(
             cls.get_modak_api_job(),
-            headers= { "Content-Type": "application/json" },
-            json= {
-                "job": {
-                    "application": app,
-                    "target": target,
-                    "job_options": job_options,
-                    "optimisation": opt.get("optimization", {})
-                }
+            headers={ "Content-Type": "application/json" },
+            json={
+                "job": job_request
             })
         if response.status_code != 200:
             print("Optimisation request error")
@@ -408,10 +428,12 @@ class AadmTransformer:
         opt_nodes = {}
         exec_nodes = {}
 
+
         # extract optimization from nodes and assign empty to non-optimized
         for key, value in result["node_templates"].items():
             opt_nodes[key] = value.get("optimization", "")
             value.pop("optimization", None)
+
 
         # extract execution nodes
         for key, value in result["node_templates"].items():
@@ -434,17 +456,6 @@ class AadmTransformer:
                 if app_req in opt_nodes:
                     exec_nodes[key] = app_req
 
-        # modify image properties for optimization nodes
-        for node, opts in opt_nodes.items():
-            if not opts:
-                continue
-
-            for property in result["node_templates"][node]["properties"]:
-                if ModakConfig.is_valid_image_property(property):
-                    opt_image = ModakConfig.get_opt_image(opts)
-                    if opt_image:
-                        result["node_templates"][node]["properties"][property] = opt_image
-
         # modify content properties for execution nodes
         for node, opt_node in exec_nodes.items():
             host_node = {}
@@ -455,11 +466,23 @@ class AadmTransformer:
                 if host_req:
                     host_node = result["node_templates"][host_req]
 
+            app = result["node_templates"][opt_node]["properties"]
+            target = cls.resolve_optimization_target(host_node)
+            job_options = result["node_templates"][node]["properties"]
+            opts = opt_nodes[opt_node]
+
+            # modify image properties for optimization nodes
+            if opts:
+                for property in result["node_templates"][opt_node]["properties"]:
+                    if ModakConfig.is_valid_image_property(property):
+                        opt_image = ModakConfig.get_opt_image(
+                            app=app, target=target, job_options=job_options, opt_json_string=opts,
+                        )
+                        if opt_image:
+                            result["node_templates"][opt_node]["properties"][property] = opt_image
+
             content = ModakConfig.get_opt_job_content(
-                app = result["node_templates"][opt_node]["properties"],
-                target = cls.resolve_optimization_target(host_node),
-                job_options = result["node_templates"][node]["properties"],
-                opt_json_string = opt_nodes[opt_node],
+                app=app, target=target, job_options=job_options, opt_json_string=opts,
             )
             result["node_templates"][node]["properties"]["content"] = content
 

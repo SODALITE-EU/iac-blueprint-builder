@@ -2,7 +2,7 @@ FROM python:3.10.2-alpine3.15
 
 ENV MODAK_ENDPOINT "http://modak.sodalite.eu:5000"
 ENV MODAK_API_IMAGE "/get_image"
-ENV MODAK_API_JOB "/get_job_content"
+ENV MODAK_API_JOB "/get_optimisation"
 
 ADD . /parser
 WORKDIR /parser

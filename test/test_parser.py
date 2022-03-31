@@ -281,7 +281,7 @@ def remove_link(link):
     return link[link.rfind('/')+1:]
 
 
-def mock_modak_get_opt_image(opt_json_string: str):
+def mock_modak_get_opt_image(app, target, job_options, opt_json_string):
     if '"xla": true' in opt_json_string:
         return "docker://modakopt/modak:tensorflow-2.1-gpu-src"
     else:
@@ -292,49 +292,17 @@ def mock_modak_get_opt_job_content(app, target, job_options, opt_json_string):
     return """
     #PBS -N {app_tag}
     #PBS -q {queue}
-    #PBS -l nodes={node_count}:gpus={request_gpus}:{queue}
+    #PBS -l nodes={node_count}:ppn=1:gpus={request_gpus}:{queue}
     #PBS -l procs={core_count}
     """.format(
-        app_tag=app.get("app_tag"), queue=job_options.get("queue"), node_count=job_options.get("node_count"),
+        app_tag=job_options.get("job_name"), queue=job_options.get("queue"), node_count=job_options.get("node_count"),
         request_gpus=job_options.get("request_gpus"), core_count=job_options.get("core_count"))
 
 
-@pytest.mark.online
-def test_parser_opt():
-
-    # this component has optimisation field
-    opt_component = "optimization-skyline-extractor"
-    # expected container for $opt_component
-    opt_expected_container_runtime = "docker://modakopt/modak:tensorflow-2.1-gpu-src"
-
-    # this component has optimisation field, but optimised container not found
-    opt_not_found_component = "optimization-skyline-alignment"
-    # expected container for $opt_not_found_component
-    opt_not_found_expected_container_runtime = "snow-skyline-alignment:latest"
-
-
-    test = TestConfig("opt", "test/opt_fixture.json")
-    parser.parse_data(test.parser_dest(), test.fixture())
-    service = test.service()
-
-    opt_component_template = service.get("topology_template").get("node_templates").get(opt_component)
-    image_name = opt_component_template.get("properties").get("image_name")
-
-    assert not "optimization" in opt_component_template
-    assert image_name == opt_expected_container_runtime
-
-    opt_not_found_component_template = service.get("topology_template").get("node_templates").get(opt_not_found_component)
-    image_name = opt_not_found_component_template.get("properties").get("image_name")
-
-    assert not "optimization" in opt_not_found_component_template
-    assert image_name == opt_not_found_expected_container_runtime
-
-
-def test_parser_opt_offline(mocker):
-
-    mocker.patch('src.iacparser.ModakConfig.get_opt_image', new=mock_modak_get_opt_image)
-    test_parser_opt()
-
+def test_modak_config_init():
+    assert parser.ModakConfig.config == None
+    parser.ModakConfig.init()
+    assert type(parser.ModakConfig.config) == dict
 
 @pytest.mark.online
 def test_parser_opt_job():
@@ -365,7 +333,7 @@ def test_parser_opt_job():
 
     assert "#PBS -N skyline-extraction-training" in content
     assert "#PBS -q ssd" in content
-    assert "#PBS -l nodes=1:gpus=1:ssd" in content
+    assert "#PBS -l nodes=1:ppn=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
 
 
@@ -405,7 +373,7 @@ def test_parser_no_opt_job():
 
     assert "#PBS -N no-opt-skyline-extraction-training" in content
     assert "#PBS -q ssd" in content
-    assert "#PBS -l nodes=1:gpus=1:ssd" in content
+    assert "#PBS -l nodes=1:ppn=1:gpus=1:ssd" in content
     assert "#PBS -l procs=40" in content
 
 
@@ -444,11 +412,6 @@ def test_parser_class_removal_from_tosca_types():
     assert service.get("node_types").get("sodalite.nodes.hpc.WM").get("class") == None
 
 
-def test_modak_config_init():
-    assert parser.ModakConfig.config == None
-    parser.ModakConfig.init()
-    assert type(parser.ModakConfig.config) == dict
-
 def test_modak_config_get_modak_endpoint():
     test_endpoint = "http://localhost:4567"
     with mock.patch.dict(os.environ, {"MODAK_ENDPOINT": test_endpoint}):
@@ -480,7 +443,7 @@ def mock_modak_get_opt_image_bad_response(*args, **kwargs):
 
 def mock_modak_get_opt_image_good_response(*args, **kwargs):
     response = requests.Response()
-    response._content = '{"job":{"container_runtime":"docker://modakopt/modak:tensorflow-2.1-gpu-src"}}'.encode('ascii')
+    response._content = '{"job":{"application":{"container_runtime":"docker://modakopt/modak:tensorflow-2.1-gpu-src"}}}'.encode('ascii')
     response.status_code = 200
     return response
 
@@ -488,12 +451,12 @@ def test_modak_config_get_opt_image(mocker):
     mocker.patch('requests.post', new=mock_modak_get_opt_image_bad_response)
     test = TestConfig("opt", "test/opt_fixture.json")
     opt = test.fixture().get("https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-skyline-alignment").get("optimization")
-    assert parser.ModakConfig.get_opt_image(opt) == ""
+    assert parser.ModakConfig.get_opt_image(app={}, target={}, job_options={}, opt_json_string=opt) == ""
 
     mocker.patch('requests.post', new=mock_modak_get_opt_image_good_response)
     test = TestConfig("opt", "test/opt_fixture.json")
     opt = test.fixture().get("https://www.sodalite.eu/ontologies/workspace/1/optimization/optimization-skyline-alignment").get("optimization")
-    assert parser.ModakConfig.get_opt_image(opt) == "docker://modakopt/modak:tensorflow-2.1-gpu-src"
+    assert parser.ModakConfig.get_opt_image(app={}, target={}, job_options={}, opt_json_string=opt) == "docker://modakopt/modak:tensorflow-2.1-gpu-src"
 
 
 def mock_modak_get_opt_job_content_bad_response(*args, **kwargs):

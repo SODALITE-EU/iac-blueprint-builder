@@ -73,7 +73,7 @@
           "properties": [
             {
               "https://www.sodalite.eu/ontologies/workspace/1/docker/target": {
-                "value": "hlrs_testbed",
+                "value": "hlrs-testbed",
                 "label": "target"
               }
             }
@@ -88,7 +88,7 @@
     "properties": [
       {
         "https://www.sodalite.eu/ontologies/workspace/1/docker/app_tag": {
-          "value": "skyline-extraction-training",
+          "value": "tensorflow",
           "label": "app_tag"
         }
       },
@@ -129,7 +129,7 @@
         }
       }
     ],
-    "optimization": "\"{ \"name\": \"ai_training.tensor_flow\", \"optimization\": { \"enable_opt_build\": true, \"enable_autotuning\": true, \"app_type\":\"ai_training\", \"opt_build\": { \"cpu_type\": \"x86\", \"acc_type\": \"nvidia\" }, \"autotuning\": { \"tuner\": \"cresta\", \"input\": \"begin parameters begin typing int NB end typing begin constraints range NB 80. 90, 100, 120, 140 end constraints end parameters begin build command: make -DNB=$NB end build begin run command: ./solver end run\" }, \"app_type-ai_training\": { \"config\": {  \"ai_framework\": \"tensorflow\" ,\"type\": \"translation\" ,\"distributed_training\": true ,\"layers\": 6 ,\"parameters\": 872684236 }, \"data\": {  \"location\": \"/some/data\"  ,\"basedata\": \"imagenet\"  ,\"size\": 67  ,\"count\": 4389  ,\"etl\": {  \"prefetch\": 100  ,\"cache\": 100 } } ,\"ai_framework-tensorflow\": {  \"version\": \"2.1\"  ,\"xla\": true } } } } \""
+    "optimization": "\"{ \"name\": \"ai_training.tensor_flow\", \"optimization\": { \"enable_opt_build\": true, \"enable_autotuning\": false, \"app_type\":\"ai_training\", \"opt_build\": { \"cpu_type\": \"x86\", \"acc_type\": \"nvidia\" }, \"app_type-ai_training\": { \"config\": {  \"ai_framework\": \"tensorflow\" }, \"data\": {  \"location\": \"/some/data\"  ,\"basedata\": \"imagenet\"  ,\"size\": 67  ,\"count\": 4389  ,\"etl\": {  \"prefetch\": 100  ,\"cache\": 100 } } ,\"ai_framework-tensorflow\": {  \"version\": \"2.1\"  ,\"xla\": true } } } } \""
   },
   "https://www.sodalite.eu/ontologies/workspace/1/optimization/batch-app-runtime-hpc": {
     "type": "https://www.sodalite.eu/ontologies/workspace/1/docker/sodalite.nodes.Batch.Container.Runtime",
@@ -173,7 +173,7 @@
       },
       {
         "https://www.sodalite.eu/ontologies/workspace/1/openstack/wall_time_limit": {
-          "value": "12:00:00 ",
+          "value": "12:00:00",
           "label": "wall_time_limit"
         }
       },
@@ -337,7 +337,7 @@
       },
       {
         "https://www.sodalite.eu/ontologies/workspace/1/openstack/wall_time_limit": {
-          "value": "12:00:00 ",
+          "value": "12:00:00",
           "label": "wall_time_limit"
         }
       },
