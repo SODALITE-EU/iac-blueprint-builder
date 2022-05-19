@@ -1,4 +1,4 @@
-FROM python:3.10.2-alpine3.15
+FROM python:alpine
 
 ENV MODAK_ENDPOINT "http://modak.sodalite.eu:5000"
 ENV MODAK_API_IMAGE "/get_image"
