@@ -10,3 +10,4 @@ flask_swagger_ui
 pytest
 pytest-mock
 pytest-cov
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
