@@ -1,4 +1,4 @@
-Werkzeug<=2.0.2
+Werkzeug<=3.1.5
 itsdangerous<=2.0.1
 Jinja2<3.1
 Flask==1.1.1
@@ -10,3 +10,4 @@ flask_swagger_ui
 pytest
 pytest-mock
 pytest-cov
+urllib3>=2.6.3 # not directly required, pinned by Snyk to avoid a vulnerability
